@@ -145,13 +145,13 @@ class Board:
                         self.white_count -= 1
                     else:
                         self.black_count -= 1
-                if (turn == 'B' and target[0] == self.row - 1):
+                if (turn == 'B' and target[0] == self.row - 1):# and not self.board[target[0]][target[1]].is_king):
                     if not is_start_checker_king:
                         temp_saved_move[2] = True
                     self.board[target[0]][target[1]].become_king()
                     #self.saved_move[2] = True
 
-                elif (turn == 'W' and target[0] == 0):
+                elif (turn == 'W' and target[0] == 0):# and not self.board[target[0]][target[1]].is_king):
                     if not is_start_checker_king:
                         temp_saved_move[2] = True
                     self.board[target[0]][target[1]].become_king()
@@ -378,7 +378,11 @@ class Board:
                 x,y,c,k = saved_enemy
                 self.board[x][y].color = c
                 self.board[x][y].is_king = k
-
+                if c == "W":
+                    self.white_count += 1
+                if c == "B":
+                    self.black_count += 1
+            self.tie_counter -= 1
             self.saved_move.pop(-1)
         else:
             raise Exception("Cannot undo operation")
@@ -392,11 +396,28 @@ class Board:
 if __name__ == "__main__":
 
 
-    b=Board(10,10,2)
-    b.board[0][3] = Checker.Checker("B", [0, 3])
-    b.board[0][5] = Checker.Checker("B", [0, 5])
+    b=Board(7,7,2)
+    b.board[1][3] = Checker.Checker("W", [1, 3])
 
-    b.board[1][4] = Checker.Checker("W", [1, 4])
 
     b.show_board()
-    print(b.is_win(1))
+    m = b.get_all_possible_moves("W")[0][0]
+    b.make_move(m,"W")
+    b.show_board()
+    m = b.get_all_possible_moves("W")[0][0]
+    b.make_move(m,"W")
+    b.show_board()
+    m = b.get_all_possible_moves("W")[0][0]
+    b.make_move(m,"W")
+    b.show_board()
+    print("Undo")
+    b.undo()
+    b.show_board()
+    print("Undo")
+    b.undo()
+    b.show_board()
+    print("Undo")
+    b.undo()
+    b.show_board()
+
+

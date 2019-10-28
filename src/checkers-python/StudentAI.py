@@ -34,7 +34,7 @@ class StudentAI():
     def best_move(self, moves: [list]) :
         best = moves[0][0]
         max_value = - math.inf
-        depth = 5
+        depth = 3
         for chess in moves:
             for move in chess:
                 val = self.minValue(move, depth)

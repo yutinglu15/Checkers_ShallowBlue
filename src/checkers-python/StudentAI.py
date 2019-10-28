@@ -39,7 +39,7 @@ class StudentAI():
         for chess in moves:
             for move in chess:
                 # val = self.greedy(copy.deepcopy(self.board), move, depth, self.color)
-                val = self.maxValue(copy.deepcopy(self.board), move, depth)
+                val = self.maxValue(copy.deepcopy(self.board), move, depth, -math.inf, math.inf)
                 if val > max_value:
                     best = [move]
                     max_value = val
@@ -61,24 +61,31 @@ class StudentAI():
         return val
 
 
-    def minValue(self, tmp_board, move, depth):
+    def minValue(self, tmp_board, move, depth, alpha, beta):
         tmp_board.make_move(move, self.opponent[self.color])
         if depth == 0:
             return self.utility(tmp_board)
         min_val = math.inf
         for chess in tmp_board.get_all_possible_moves(self.color):
             for move in chess:
-                min_val = min(self.maxValue(copy.deepcopy(tmp_board),move, depth - 1), min_val)
+                # min_val = min(self.maxValue(copy.deepcopy(tmp_board), move, depth - 1), min_val)
+                min_val = min(self.maxValue(copy.deepcopy(tmp_board), move, depth - 1, alpha, beta), min_val)
+                beta = min(beta, min_val)
+                if alpha >= beta:
+                    return min_val
         return min_val
 
-    def maxValue(self, tmp_board, move, depth):
+    def maxValue(self, tmp_board, move, depth, alpha, beta):
         tmp_board.make_move(move, self.color)
         if depth == 0:
             return self.utility(tmp_board)
         max_val = - math.inf
         for chess in tmp_board.get_all_possible_moves(self.opponent[self.color]):
             for move in chess:
-                max_val = max(self.minValue(copy.deepcopy(tmp_board),move, depth - 1), max_val)
+                max_val = max(self.minValue(copy.deepcopy(tmp_board),move, depth - 1, alpha, beta), max_val)
+                alpha = max(alpha, max_val)
+                if alpha >= beta:
+                    return max_val
         return max_val
 
     def utility(self, board):

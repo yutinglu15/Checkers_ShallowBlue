@@ -33,47 +33,53 @@ class StudentAI():
 
     def best_move(self, moves: [list]) :
         print(self.color)
-        best = None
+        best = []
         max_value = - math.inf
         depth = 3
         for chess in moves:
             for move in chess:
-                val = self.greedy(move, depth)
+                # val = self.greedy(copy.deepcopy(self.board), move, depth, self.color)
+                val = self.maxValue(copy.deepcopy(self.board), move, depth)
                 if val > max_value:
-                    best = move
+                    best = [move]
                     max_value = val
-        print(best, max_value)
-        return move
+                elif val == max_value:
+                    best.append(move)
+        print(max_value)
+        return best[randint(0,len(best)-1)]
 
-    def greedy(self, move, depth):
-        tmp_board = copy.copy(self.board)
+    def greedy(self, tmp_board, move, depth,curr_color):
+        tmp_board.make_move(move, curr_color)
         if depth == 0:
             return self.utility(tmp_board)
-        val = 0
-        for chess in tmp_board.get_all_possible_moves(self.color):
+        val = - math.inf
+        moves = tmp_board.get_all_possible_moves(self.opponent[curr_color])
+        for chess in moves:
             for move in chess:
-                val += self.greedy(move, depth - 1)
+                oppo_board = copy.deepcopy(tmp_board)
+                val = max(val, self.greedy(oppo_board, move, depth - 1, self.opponent[curr_color]))
         return val
 
-    # def minValue(self, move, depth):
-    #     tmp_board = copy.copy(self.board)
-    #     if depth == 0:
-    #         return self.utility(tmp_board)
-    #     min_val = math.inf
-    #     for chess in tmp_board.get_all_possible_moves(self.opponent[self.color]):
-    #         for move in chess:
-    #             min_val = min(self.maxValue(move, depth - 1), min_val)
-    #     return min_val
-    #
-    # def maxValue(self, move, depth):
-    #     tmp_board = copy.copy(self.board)
-    #     if depth == 0:
-    #         return self.utility(tmp_board)
-    #     max_val = - math.inf
-    #     for chess in tmp_board.get_all_possible_moves(self.color):
-    #         for move in chess:
-    #             max_val = max(self.minValue(move, depth - 1), max_val)
-    #     return max_val
+
+    def minValue(self, tmp_board, move, depth):
+        tmp_board.make_move(move, self.opponent[self.color])
+        if depth == 0:
+            return self.utility(tmp_board)
+        min_val = math.inf
+        for chess in tmp_board.get_all_possible_moves(self.color):
+            for move in chess:
+                min_val = min(self.maxValue(copy.deepcopy(tmp_board),move, depth - 1), min_val)
+        return min_val
+
+    def maxValue(self, tmp_board, move, depth):
+        tmp_board.make_move(move, self.color)
+        if depth == 0:
+            return self.utility(tmp_board)
+        max_val = - math.inf
+        for chess in tmp_board.get_all_possible_moves(self.opponent[self.color]):
+            for move in chess:
+                max_val = max(self.minValue(copy.deepcopy(tmp_board),move, depth - 1), max_val)
+        return max_val
 
     def utility(self, board):
         b = self.count_color(board.board, 'B')
@@ -85,5 +91,5 @@ class StudentAI():
         count = 0
         for row in board:
             for chess in row:
-                count += 1 if chess.color == color else 0
+                count += 1 if chess.get_color() == color else 0
         return count

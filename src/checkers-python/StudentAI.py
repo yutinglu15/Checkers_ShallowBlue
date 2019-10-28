@@ -32,38 +32,58 @@ class StudentAI():
         return move
 
     def best_move(self, moves: [list]) :
-        best = moves[0][0]
+        print(self.color)
+        best = None
         max_value = - math.inf
-        depth = 4
+        depth = 3
         for chess in moves:
             for move in chess:
-                val = self.minValue(move, depth)
+                val = self.greedy(move, depth)
                 if val > max_value:
                     best = move
                     max_value = val
+        print(best, max_value)
         return move
 
-    def minValue(self, move, depth):
+    def greedy(self, move, depth):
         tmp_board = copy.copy(self.board)
         if depth == 0:
             return self.utility(tmp_board)
-        min_val = math.inf
-        for chess in tmp_board.get_all_possible_moves(self.opponent[self.color]):
-            for move in chess:
-                min_val = min(self.maxValue(move, depth - 1), min_val)
-        return min_val
-
-    def maxValue(self, move, depth):
-        tmp_board = copy.copy(self.board)
-        if depth == 0:
-            return self.utility(tmp_board)
-        max_val = - math.inf
+        val = 0
         for chess in tmp_board.get_all_possible_moves(self.color):
             for move in chess:
-                max_val = max(self.minValue(move, depth - 1), max_val)
-        return max_val
+                val += self.greedy(move, depth - 1)
+        return val
+
+    # def minValue(self, move, depth):
+    #     tmp_board = copy.copy(self.board)
+    #     if depth == 0:
+    #         return self.utility(tmp_board)
+    #     min_val = math.inf
+    #     for chess in tmp_board.get_all_possible_moves(self.opponent[self.color]):
+    #         for move in chess:
+    #             min_val = min(self.maxValue(move, depth - 1), min_val)
+    #     return min_val
+    #
+    # def maxValue(self, move, depth):
+    #     tmp_board = copy.copy(self.board)
+    #     if depth == 0:
+    #         return self.utility(tmp_board)
+    #     max_val = - math.inf
+    #     for chess in tmp_board.get_all_possible_moves(self.color):
+    #         for move in chess:
+    #             max_val = max(self.minValue(move, depth - 1), max_val)
+    #     return max_val
 
     def utility(self, board):
-        b = sum([r.count('b')+r.count('B') for r in board.board])
-        w = sum([r.count('w') + r.count('W') for r in board.board])
+        b = self.count_color(board.board, 'B')
+        w = self.count_color(board.board, 'W')
+        #print("black:",b," white:",w)
         return b-w if self.color == 1 else w-b
+
+    def count_color(self, board, color):
+        count = 0
+        for row in board:
+            for chess in row:
+                count += 1 if chess.color == color else 0
+        return count

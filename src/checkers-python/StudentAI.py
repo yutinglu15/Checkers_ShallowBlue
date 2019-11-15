@@ -2,6 +2,7 @@ from random import randint
 from BoardClasses import Move
 from BoardClasses import Board
 import math
+import copy
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 class StudentAI():
@@ -16,6 +17,7 @@ class StudentAI():
         self.opponent = {1:2,2:1}
         self.color = 2
     def get_move(self,move):
+        print(self.color)
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
@@ -27,11 +29,11 @@ class StudentAI():
         #move = moves[index][inner_index]
         #print(moves)
         move = self.minimax_move(moves)
+        #move = self.monte_carlo_tree([m for chess in moves for m in chess], 10, 10)
         self.board.make_move(move,self.color)
         return move
 
     def minimax_move(self, moves: [list]) :
-        print(self.color)
         best = []
         max_value = - math.inf
         depth = 4
@@ -43,9 +45,51 @@ class StudentAI():
                     max_value = val
                 elif val == max_value:
                     best.append(move)
-        print(max_value)
-        return best[randint(0,len(best)-1)]
+        if len(best) == 1:
+            return best[randint(0,len(best)-1)]
+        print(len(best))
+        return self.monte_carlo_tree(best, 10, 10)
 
+    def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
+        best_uct = 0
+        best_move = 0
+        for move in moves:
+            wins = self.simulate(move, simulate_times)
+            uct = wins/simulate_times + math.sqrt(2*math.log(s_parent)/simulate_times)
+            if uct > best_uct:
+                best_move = move
+        return best_move
+
+    def simulate(self, move, s):
+        wins = 0
+        board = copy.deepcopy(self.board)
+        board.make_move(move, self.color)
+        for i in range(s):
+            curr_turn = self.opponent[self.color]
+            t = 0
+            for turn in range(20):
+                if board.is_win(self.color) == self.color:
+                    wins += 1
+                    self.undo(board,t)
+                    break
+                elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
+                    self.undo(board, t)
+                    break
+                moves = board.get_all_possible_moves(curr_turn)
+                index = randint(0,len(moves)-1)
+                inner_index =  randint(0,len(moves[index])-1)
+                board.make_move(moves[index][inner_index], curr_turn)
+                curr_turn = self.opponent[curr_turn]
+                t += 1
+            else:
+                wins += 0.5
+                self.undo(board, t)
+
+        return wins
+
+    def undo(self, board, times):
+        for _ in range(times):
+            board.undo()
 
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])

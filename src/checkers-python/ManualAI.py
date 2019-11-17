@@ -9,7 +9,6 @@ We are following the javadoc docstring format which is:
 
 from Move import Move
 from BoardClasses import Board
-from random import randint
 
 class ManualAI():
     """
@@ -46,15 +45,12 @@ class ManualAI():
         moves = self.board.get_all_possible_moves(self.color)
         while True:
             try:
-                # for i,checker_moves in enumerate(moves):
-                #     print(i,':[',end="")
-                #     for j, move in enumerate(checker_moves):
-                #         print(j,":",move,end=", ")
-                #     print("]")
-                # index,inner_index = map(lambda x: int(x), input("Select Move {int} {int}: ").split()) # input is from console is handled here.
-                # res_move = moves[index][inner_index]
-                index = randint(0, len(moves) - 1)
-                inner_index = randint(0, len(moves[index]) - 1)
+                for i,checker_moves in enumerate(moves):
+                    print(i,':[',end="")
+                    for j, move in enumerate(checker_moves):
+                        print(j,":",move,end=", ")
+                    print("]")
+                index,inner_index = map(lambda x: int(x), input("Select Move {int} {int}: ").split()) # input is from console is handled here.
                 res_move = moves[index][inner_index]
             except KeyboardInterrupt:
                 raise KeyboardInterrupt

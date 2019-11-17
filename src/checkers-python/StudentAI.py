@@ -126,7 +126,21 @@ class StudentAI():
         return max_val
 
     def utility(self, board):
-        b = self.board.black_count
-        w = self.board.white_count
+        bking, wking = 0, 0
+        for r in range(self.board.row):
+            for c in range(self.board.col):
+                if self.board.board[r][c].color == "B":
+                    bking += self.board.board[r][c].is_king
+                elif self.board.board[r][c].color == "W":
+                    wking += self.board.board[r][c].is_king
+
+        bback = sum(self.board.board[0][i].color == "B" for i in range(self.board.col))
+        wback = sum(self.board.board[self.board.row-1][i].color == "W" for i in range(self.board.col))
+
+        bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
+        wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
+
+        b = 3*self.board.black_count + bking + bback + bedge
+        w = 3*self.board.white_count + wking + wback + wedge
         #print("black:",b," white:",w)
         return b-w if self.color == 1 else w-b

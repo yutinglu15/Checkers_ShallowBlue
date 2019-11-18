@@ -33,7 +33,7 @@ class MonteCarloTree():
         start_time = time.time()
         while time.time() - start_time < simulate_time:
             select_node = self.select(self.root, self.root.turn)
-            w = self.simulate(select_node.board, select_node.root.turn)
+            w = self.simulate(select_node.board, select_node.turn)
             self.backpropagate(select_node, w)
 
         # select the best child
@@ -69,27 +69,28 @@ class MonteCarloTree():
 
         # explore all possible children
         children = []
-        for move in moves:
-            board.make_move(move, turn)
+        for chess in moves:
+            for move in chess:
+                board.make_move(move, turn)
 
-            # if we have seen this board
-            if str(board.board)+str(turn) in self.states:
-                children.append(self.states[str(board.board)+str(turn)])
+                # if we have seen this board
+                if str(board.board)+str(turn) in self.states:
+                    children.append(self.states[str(board.board)+str(turn)])
+                    board.undo()
+                    continue
+
+                # else we expand and simulate
+                child = Node(board, node, turn)
+                child.move = move  # get the board with which move
+                children.append(child)
+                self.states[str(board.board)+str(turn)] = child
+
+                win = self.simulate(board, turn)
+                child.win = win
+                child.visit = 1
+                self.backpropagate(child, win)
+
                 board.undo()
-                continue
-
-            # else we expand and simulate
-            child = Node(board, node, turn)
-            child.move = move  # get the board with which move
-            children.append(child)
-            self.states[str(board.board)+str(turn)] = child
-
-            win = self.simulate(board, turn)
-            child.win = win
-            child.visit = 1
-            self.backpropagate(child, win)
-
-            board.undo()
 
         return self.best_child(children)
 
@@ -178,6 +179,6 @@ class StudentAI():
         # inner_index =  randint(0,len(moves[index])-1)
         # move = moves[index][inner_index]
         mct = MonteCarloTree(self.board, moves, self.color, self.opponent)
-        move = mct.get_action(60)
-        self.board.make_move(move,self.color)
+        move = mct.get_action(10)
+        self.board.make_move(move, self.color)
         return move

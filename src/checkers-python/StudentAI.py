@@ -26,39 +26,14 @@ class MonteCarloTree():
         self.states = {str(self.board.board): self.root} # {board: node}
 
     def get_action(self, simulate_time):
-        # simulate each child once
-        children = []
-        for move in self.moves:
-            self.board.make_move(move, self.color)
-            child = Node(self.board, self.root)
-            child.move = move # get the board with which move
-            children.append(child)
-            self.states[str(self.board.board)] = child
-            win = self.simulate(self.board, move)
-            child.win = win
-            child.visit = 1
-            self.backpropagate(child, win)
-            self.board.undo()
+        curr_move = self.select(self.root, self.color)
 
-        # expand and simulate (if the board is unexplored, simulate and backpropagate
-        # if the board is explored, rollout and move to one of its child)
-        # ** should we consider the opponent's move as node in our board?
-        # ** how can we include that? simply treat it as a normal node?
         for _ in simulate_time:
-            move = self.rollout(self, self.board, self.color)
-            if str(self.board.board) not in self.states:
-                self.simulate()
-            else:
-                pass
+            ##
+            pass
 
         # select the best child
-        best_ucb = 0
-        best_move = None
-        for child in children:
-            ucb = child.ucb(1.4)
-            if ucb > best_ucb:
-                best_ucb = ucb
-                best_move = child.move
+        best_move = self.select(self.root, self.color).move
 
         return best_move
 
@@ -71,46 +46,85 @@ class MonteCarloTree():
         move = moves[index][inner_index]
         return move
 
-    def get_node(self, board):
-        return self.states[str(board.board)] if str(board.board) not in self.states else None
 
 
-    # not sure about how to implement it yet...
-    def expand(self):
-        board = self.board
-        t = 0
-        curr_node = self.get_node(board)
-        while curr_node:
-            moves = board.get_all_possible_moves(self.color)
-            move = self.rollout(moves)
-            board.make_move(move, self.color)
-            t += 1
+    def best_child(self, children):
+        best_ucb = 0
+        best_node = None
+        for child in children:
+            ucb = child.ucb(1.4)
+            if ucb > best_ucb:
+                best_ucb = ucb
+                best_node = child
+        return best_node
 
-            moves = board.get_all_possible_moves(self.opponent[self.color])
-            move = self.rollout(moves)
-            board.make_move(move, self.opponent[self.color])
-            t += 1
 
-            curr_node = self.get_node(board)
+    def select(self, node, turn):
+        board = node.board
+        moves = board.get_all_possible_moves(turn)
 
-        # now curr_node is unexplored
-        curr_node = Node(board)
+        # explore all possible children
+        children = []
+        for move in moves:
+            board.make_move(move, turn)
 
-        self.undo(board, t)
+            # if we have seen this board
+            if str(board.board)+str(turn) in self.states:
+                children.append(self.states[str(board.board)+str(turn)])
+                board.undo()
+                continue
+
+            # else we expand and simulate
+            child = Node(board, node)
+            child.move = move  # get the board with which move
+            children.append(child)
+            self.states[str(board.board)+str(turn)] = child
+
+            win = self.simulate(board, turn)
+            child.win = win
+            child.visit = 1
+            self.backpropagate(child, win)
+
+            board.undo()
+
+        return self.best_child(children)
+
+
+    # # not sure about how to implement it yet...
+    # def expand(self):
+    #     board = self.board
+    #     t = 0
+    #     curr_node = self.get_node(board)
+    #     while curr_node:
+    #         moves = board.get_all_possible_moves(self.color)
+    #         move = self.rollout(moves)
+    #         board.make_move(move, self.color)
+    #         t += 1
+    #
+    #         moves = board.get_all_possible_moves(self.opponent[self.color])
+    #         move = self.rollout(moves)
+    #         board.make_move(move, self.opponent[self.color])
+    #         t += 1
+    #
+    #         curr_node = self.get_node(board)
+    #
+    #     # now curr_node is unexplored
+    #     curr_node = Node(board)
+    #
+    #     self.undo(board, t)
 
 
     # simulate the game with a start move
-    def simulate(self, board, move):
-        board.make_move(move, self.color)
+    def simulate(self, board, color):
         win = 0
-        curr_turn = self.opponent[self.color]
+        curr_turn = self.opponent[color]
         t = 0
         for turn in range(20):
-            if board.is_win(self.color) == self.color:
+            if board.is_win(color) == color:
                 win = 1
                 self.undo(board,t)
                 break
-            elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
+            elif board.is_win(self.opponent[color]) == self.opponent[color]:
                 self.undo(board, t)
                 break
             move = self.rollout(board.get_all_possible_moves(curr_turn))

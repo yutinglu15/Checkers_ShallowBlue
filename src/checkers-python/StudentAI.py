@@ -3,13 +3,15 @@ from BoardClasses import Move
 from BoardClasses import Board
 import math
 import copy
+import time
 
 class Node():
-    def __init__(self, board, parent):
+    def __init__(self, board, parent, turn):
         self.board = copy.deepcopy(board)
         self.parent = parent
         self.win = 0
         self.visit = 0
+        self.turn = turn
 
 
     def ucb(self, c):
@@ -22,15 +24,17 @@ class MonteCarloTree():
         self.moves = moves
         self.color = color
         self.opponent = opponent
-        self.root = Node(board, None)
+        self.root = Node(board, None, self.color)
         self.states = {str(self.board.board): self.root} # {board: node}
 
     def get_action(self, simulate_time):
-        curr_move = self.select(self.root, self.color)
+        # curr_move = self.select(self.root, self.color)
 
-        for _ in simulate_time:
-            ##
-            pass
+        start_time = time.time()
+        while time.time() - start_time < simulate_time:
+            select_node = self.select(self.root, self.root.turn)
+            w = self.simulate(select_node.board, select_node.root.turn)
+            self.backpropagate(select_node, w)
 
         # select the best child
         best_move = self.select(self.root, self.color).move
@@ -42,7 +46,7 @@ class MonteCarloTree():
     # random roll a move
     def rollout(self, moves):
         index = randint(0,len(moves)-1)
-        inner_index =  randint(0,len(moves[index])-1)
+        inner_index = randint(0,len(moves[index])-1)
         move = moves[index][inner_index]
         return move
 
@@ -75,7 +79,7 @@ class MonteCarloTree():
                 continue
 
             # else we expand and simulate
-            child = Node(board, node)
+            child = Node(board, node, turn)
             child.move = move  # get the board with which move
             children.append(child)
             self.states[str(board.board)+str(turn)] = child
@@ -174,6 +178,6 @@ class StudentAI():
         # inner_index =  randint(0,len(moves[index])-1)
         # move = moves[index][inner_index]
         mct = MonteCarloTree(self.board, moves, self.color, self.opponent)
-        move = mct.get_action(20)
+        move = mct.get_action(60)
         self.board.make_move(move,self.color)
         return move

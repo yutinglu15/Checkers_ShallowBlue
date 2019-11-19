@@ -4,6 +4,7 @@ from BoardClasses import Board
 import math
 import copy
 import random
+import numpy as np
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -18,7 +19,10 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
+
+        # new params
         self.movecount = 0
+        self.thetas = np.zeros(5)
 
     def get_move(self, move):
         #print(self.color)
@@ -27,6 +31,7 @@ class StudentAI():
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
+
         self.train()
 
         #index = randint(0,len(moves)-1)
@@ -100,7 +105,8 @@ class StudentAI():
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
         if depth == 0:
-            u = self.utility(self.board)
+            #u = self.utility(self.board)
+            u = self.utility_with_theta(self.board)
             self.board.undo()
             return u
         min_val = math.inf
@@ -117,7 +123,8 @@ class StudentAI():
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
         if depth == 0:
-            u = self.utility(self.board)
+            #u = self.utility(self.board)
+            u = self.utility_with_theta(self.board)
             self.board.undo()
             return u
         max_val = - math.inf
@@ -159,6 +166,14 @@ class StudentAI():
     ### Training heuristics using Linear Regression ####
     ####################################################
 
+    def utility_with_theta(self, board):
+        X_black, X_white = self.get_X(board)
+        b = X_black * self.thetas
+        w = X_white * self.thetas
+
+        return b - w if self.color == 1 else w - b
+
+
     def get_X(self, board):
         bking, wking = 0, 0
         for r in range(self.board.row):
@@ -174,19 +189,20 @@ class StudentAI():
         bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
         wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
 
-        X_black = [self.board.black_count, bking, bback, bedge, self.movecount]
-        X_white = [self.board.white_count, wking, wback, wedge, self.movecount]
+        X_black = np.array([self.board.black_count, bking, bback, bedge, self.movecount])
+        X_white = np.array([self.board.white_count, wking, wback, wedge, self.movecount])
 
-        return (X_black, X_white)
+        return X_black, X_white
 
-    def model(self, X, thetas):
-        # X = [count, king, back, edge, time]
-        # thetas = [t1, t2, t3, t4, t5]
-        return thetas[0] * X[0] + thetas[1] * X[1] + thetas[2] * X[2] + thetas[3] * X[3] + thetas[4] * X[4]
+    # def model(self, X, thetas):
+    #     # X = [count, king, back, edge, time]
+    #     # thetas = [t1, t2, t3, t4, t5]
+    #     #return thetas[0] * X[0] + thetas[1] * X[1] + thetas[2] * X[2] + thetas[3] * X[3] + thetas[4] * X[4]
+    #     return X*thetas
 
 
     def train(self):
-        thetas = [random.random() for i in range(5)]
+        self.thetas = np.random.rand(5)
 
         epoch = 0.01
         alpha = 0.05
@@ -198,13 +214,59 @@ class StudentAI():
 
         return thetas
 
+    def simulate_times(self, color, simulate_times):
+        wins = 0
+        for _ in simulate_times:
+            wins += self.simulate_lr(color)
 
+        return wins
 
+    def simulate_lr(self, color):
+        newboard = Board(self.col, self.row, self.p)
+        newboard.initialize_game()
+
+        feature_list_b = []
+        feature_list_w = []
+
+        win = 0
+        curr_turn = color
+
+        for turn in range(50):
+            if newboard.is_win(color) == color:
+                win = 1
+                break
+            elif newboard.is_win(self.opponent[color]) == self.opponent[color]:
+                break
+            move = self.minimax_move(newboard.get_all_possible_moves(curr_turn))
+            newboard.make_move(move, curr_turn)
+
+            b, w = self.get_X(self.board)
+            feature_list_b.append(b)
+            feature_list_w.append(w)
+
+            curr_turn = self.opponent[curr_turn]
+
+        else:
+            win = 0.5
+
+        matrix = np.array([feature_list_b, feature_list_w])
+        feature_matrix = np.hstack((matrix, np.zeros((matrix.shape[0], 1))))
+
+        if win == 1 and color == 1:
+            for fb in feature_list_b:
+                index = np.where(fb in feature_matrix[:, 0:5])
+                feature_matrix[index, 5] += 1
+
+        elif win == 0 and color == 1:
+            for fw in feature_list_w:
+                index = np.where(fw in feature_matrix[:, 0:5])
+                feature_matrix[index, 5] += 1
+
+        return win
 
     def MSE(self, thetas):
         # get mean square error by simulation
-        mse = 0
-        new_board = copy.deepcopy(self.board)
+        wins = self.simulate_times(self.color, 20)
 
         utility = self.model(self.get_X(self.board), thetas)
 

@@ -22,7 +22,9 @@ class StudentAI():
 
         # new params
         self.movecount = 0
-        self.thetas = np.zeros(5)
+        self.feature_size = 5
+        self.thetas = np.zeros(self.feature_size)
+        self.feature_matrix = np.empty((0, self.feature_size))
 
     def get_move(self, move):
         #print(self.color)
@@ -32,7 +34,8 @@ class StudentAI():
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
 
-        self.train()
+        #self.train()
+        self.simulate_lr(self.color)
 
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
@@ -244,23 +247,29 @@ class StudentAI():
             feature_list_b.append(b)
             feature_list_w.append(w)
 
+            self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
+
             curr_turn = self.opponent[curr_turn]
 
         else:
             win = 0.5
 
-        matrix = np.array([feature_list_b, feature_list_w])
-        feature_matrix = np.hstack((matrix, np.zeros((matrix.shape[0], 1))))
+        # matrix = np.array([feature_list_b, feature_list_w])
+        # feature_matrix = np.hstack((matrix, np.zeros((matrix.shape[0], 1))))
 
         if win == 1 and color == 1:
             for fb in feature_list_b:
-                index = np.where(fb in feature_matrix[:, 0:5])
-                feature_matrix[index, 5] += 1
+                index = np.where(fb in self.feature_matrix[:, 0:self.feature_size])
+                if index == []:
+                    self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
+                self.feature_matrix[index, self.feature_size] += 1
 
         elif win == 0 and color == 1:
             for fw in feature_list_w:
-                index = np.where(fw in feature_matrix[:, 0:5])
-                feature_matrix[index, 5] += 1
+                index = np.where(fw in self.feature_matrix[:, 0:self.feature_size])
+                if index == []:
+                    self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
+                self.feature_matrix[index, self.feature_size] += 1
 
         return win
 
@@ -270,7 +279,7 @@ class StudentAI():
 
         utility = self.model(self.get_X(self.board), thetas)
 
-        return mse
+
 
     def Gradient(self, mse):
         # calculate gradient according to mse

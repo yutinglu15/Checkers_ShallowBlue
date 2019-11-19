@@ -19,6 +19,8 @@ class QLearning():
         self.state_size = 0
         self.action_size = 0
         self.color = ''
+
+        # TODO: considering changing Q input to other things
         self.Q = np.zeros((self.state_size, self.action_size))
         self.Q_table = {}
 
@@ -41,6 +43,9 @@ class QLearning():
     def train(self, epoch):
         for _ in epoch:
             self.train_one_episode()
+            # TODO: kind of visualize the learning result here
+            print("in epoch ", _, "learning performance")
+
 
     def train_one_episode(self):
         new_board = Board()
@@ -91,18 +96,6 @@ class StudentAI():
         self.opponent = {1:2,2:1}
         self.color = 2
 
-        # new params
-        '''
-            new data clearification:
-                feature_matrix = [[X1, X2, ..., X_feature_size, Y],
-                                    ...
-                                    [X1m, X2m, ..., X_feature_size_m, Y]]
-        '''
-        self.movecount = 0
-        self.feature_size = 5
-        self.thetas = np.random.rand(self.feature_size)
-        self.feature_matrix = np.empty((0, self.feature_size))
-
     def get_move(self, move):
         #print(self.color)
         if len(move) != 0:
@@ -118,7 +111,8 @@ class StudentAI():
         #inner_index =  randint(0,len(moves[index])-1)
         #move = moves[index][inner_index]
         #print(moves)
-        move = self.minimax_move(moves)
+        ql = QLearning()
+        move = ql.make_action(self.board, moves)
         #move = self.monte_carlo_tree([m for chess in moves for m in chess], 10, 10)
         self.board.make_move(move, self.color)
         self.movecount += 1

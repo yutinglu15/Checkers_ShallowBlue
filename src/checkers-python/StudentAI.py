@@ -21,9 +21,15 @@ class StudentAI():
         self.color = 2
 
         # new params
+        '''
+            new data clearification:
+                feature_matrix = [[X1, X2, ..., X_feature_size, Y],
+                                    ...
+                                    [X1m, X2m, ..., X_feature_size_m, Y]]
+        '''
         self.movecount = 0
         self.feature_size = 5
-        self.thetas = np.zeros(self.feature_size)
+        self.thetas = np.random.rand(self.feature_size)
         self.feature_matrix = np.empty((0, self.feature_size))
 
     def get_move(self, move):
@@ -171,8 +177,8 @@ class StudentAI():
 
     def utility_with_theta(self, board):
         X_black, X_white = self.get_X(board)
-        b = X_black * self.thetas
-        w = X_white * self.thetas
+        b = X_black.dot(self.thetas)
+        w = X_white.dot(self.thetas)
 
         return b - w if self.color == 1 else w - b
 
@@ -205,6 +211,7 @@ class StudentAI():
 
 
     def train(self):
+        # TODO: Training thetas by linear regression and mean square error gradient descent
         self.thetas = np.random.rand(5)
 
         epoch = 0.01
@@ -225,6 +232,11 @@ class StudentAI():
         return wins
 
     def simulate_lr(self, color):
+        # simulate one time
+        # record all X features to feature_matrix
+        # update the y value accordingly
+
+        print("entering simulations")
         newboard = Board(self.col, self.row, self.p)
         newboard.initialize_game()
 
@@ -232,7 +244,8 @@ class StudentAI():
         feature_list_w = []
 
         win = 0
-        curr_turn = color
+        ### TODO: Fixing Current move in a new board
+        curr_turn = self.opponent[color]
 
         for turn in range(50):
             if newboard.is_win(color) == color:
@@ -248,7 +261,7 @@ class StudentAI():
             feature_list_w.append(w)
 
             self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
-
+            print(self.feature_matrix)
             curr_turn = self.opponent[curr_turn]
 
         else:
@@ -257,6 +270,7 @@ class StudentAI():
         # matrix = np.array([feature_list_b, feature_list_w])
         # feature_matrix = np.hstack((matrix, np.zeros((matrix.shape[0], 1))))
 
+        # TODO: Fixing y value update
         if win == 1 and color == 1:
             for fb in feature_list_b:
                 index = np.where(fb in self.feature_matrix[:, 0:self.feature_size])
@@ -274,7 +288,7 @@ class StudentAI():
         return win
 
     def MSE(self, thetas):
-        # get mean square error by simulation
+        # TODO: get mean square error by simulation
         wins = self.simulate_times(self.color, 20)
 
         utility = self.model(self.get_X(self.board), thetas)
@@ -282,5 +296,9 @@ class StudentAI():
 
 
     def Gradient(self, mse):
-        # calculate gradient according to mse
+        # TODO: calculate gradient according to mse
+        pass
+
+    def move_by_qtable(self):
+        # TODO: maybe write a function to choose move from feature matrix accordingly
         pass

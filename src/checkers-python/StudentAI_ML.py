@@ -34,9 +34,9 @@ class QLearning():
     def explore(self, state):
         epsilon = 0.2
         if random.uniform(0,1) < epsilon:
-            #TODO : implement select random move
+            # TODO : implement select random move
         else:
-            #TODO: implement explore max reward
+            # TODO: implement explore max reward
 
         pass
 

@@ -4,7 +4,7 @@ from BoardClasses import Board
 import math
 import copy
 import random
-import numpy as np
+#import numpy as np
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -27,10 +27,10 @@ class StudentAI():
                                     ...
                                     [X1m, X2m, ..., X_feature_size_m, Y]]
         '''
-        self.movecount = 0
+        self.movecount = 2
         self.feature_size = 5
-        self.thetas = np.random.rand(self.feature_size)
-        self.feature_matrix = np.empty((0, self.feature_size))
+        #self.thetas = np.random.rand(self.feature_size)
+        #self.feature_matrix = np.empty((0, self.feature_size))
 
     def get_move(self, move):
         #print(self.color)
@@ -41,7 +41,7 @@ class StudentAI():
         moves = self.board.get_all_possible_moves(self.color)
 
         #self.train()
-        self.simulate_lr(self.color)
+        #self.simulate_lr(self.color)
 
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
@@ -56,7 +56,7 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 4
+        depth = 5
         for chess in moves:
             for move in chess:
                 val = self.max_value(move, depth, -math.inf, math.inf)
@@ -114,8 +114,8 @@ class StudentAI():
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
         if depth == 0:
-            #u = self.utility(self.board)
-            u = self.utility_with_theta(self.board)
+            u = self.utility(self.board)
+            #u = self.utility_with_theta(self.board)
             self.board.undo()
             return u
         min_val = math.inf
@@ -132,8 +132,8 @@ class StudentAI():
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
         if depth == 0:
-            #u = self.utility(self.board)
-            u = self.utility_with_theta(self.board)
+            u = self.utility(self.board)
+            #u = self.utility_with_theta(self.board)
             self.board.undo()
             return u
         max_val = - math.inf
@@ -163,10 +163,10 @@ class StudentAI():
         wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
 
         time_param = math.log(self.movecount)
-        b = 3*self.board.black_count + bking * time_param + bback * (1/time_param) + bedge * (1/time_param)
-        w = 3*self.board.white_count + wking * time_param + wback * (1/time_param) + wedge * (1/time_param)
-        # b = self.board.black_count
-        # w = self.board.white_count
+        b = 5*self.board.black_count + bking * time_param + bback * (1-time_param) #+ bedge * (1/time_param)
+        w = 5*self.board.white_count + wking * time_param + wback * (1-time_param) #+ wedge * (1/time_param)
+        #b = self.board.black_count
+        #w = self.board.white_count
         #print("black:",b," white:",w)
         return b-w if self.color == 1 else w-b
 

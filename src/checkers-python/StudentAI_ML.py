@@ -25,7 +25,7 @@ class QLearning():
         self.Q_table = {}
 
     def make_action(self,state):
-        # TODO: implement this
+        # TODO: implement this to return action with max Q value
         for a in get_all_action(state):
             return action with max(self.Q_table[state, action])
 
@@ -48,6 +48,9 @@ class QLearning():
 
 
     def train_one_episode(self):
+        # This is training function for one episode, start a new board and
+        # update Q value until win or loss
+        # QUESTION IS HOW TO DECIDE OPPONENT MOVE? BY SELF-TRAIN? AND HOW TO SELF-TRAIN?
         new_board = Board()
         new_board.initialize_game()
         turn = ''

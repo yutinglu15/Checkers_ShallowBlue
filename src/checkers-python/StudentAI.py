@@ -90,14 +90,14 @@ class StudentAI():
             for turn in range(20):
                 if board.is_win(self.color) == self.color:
                     wins = 1
-                    self.undo(board,t)
+                    self.undo(board, t)
                     break
                 elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
                     self.undo(board, t)
                     break
                 moves = board.get_all_possible_moves(curr_turn)
                 index = randint(0,len(moves)-1)
-                inner_index =  randint(0,len(moves[index])-1)
+                inner_index = randint(0,len(moves[index])-1)
                 board.make_move(moves[index][inner_index], curr_turn)
                 curr_turn = self.opponent[curr_turn]
                 t += 1
@@ -158,13 +158,13 @@ class StudentAI():
 
         bback = sum(self.board.board[0][i].color == "B" for i in range(self.board.col))
         wback = sum(self.board.board[self.board.row-1][i].color == "W" for i in range(self.board.col))
-
+        # implement a diagnal heuristic
         bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
         wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
 
         time_param = math.log(self.movecount)
-        b = 5*self.board.black_count + bking * time_param + bback * (1-time_param) #+ bedge * (1/time_param)
-        w = 5*self.board.white_count + wking * time_param + wback * (1-time_param) #+ wedge * (1/time_param)
+        b = 3*self.board.black_count + 2*bking * time_param + bback * (1/time_param) #+ bedge * (1/time_param)
+        w = 3*self.board.white_count + 2*wking * time_param + wback * (1/time_param) #+ wedge * (1/time_param)
         #b = self.board.black_count
         #w = self.board.white_count
         #print("black:",b," white:",w)

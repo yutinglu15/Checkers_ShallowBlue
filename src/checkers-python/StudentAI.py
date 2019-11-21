@@ -163,8 +163,10 @@ class StudentAI():
         wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
 
         time_param = math.log(self.movecount)
-        b = 3*self.board.black_count + 2*bking * time_param + bback * (1/time_param) #+ bedge * (1/time_param)
-        w = 3*self.board.white_count + 2*wking * time_param + wback * (1/time_param) #+ wedge * (1/time_param)
+        b = self.board.black_count + bking #* time_param + bback * (1/time_param) + bedge * (1/time_param)
+        print("bking: ", bking)
+        w = self.board.white_count + wking #* time_param + wback * (1/time_param) + wedge * (1/time_param)
+        print("wking: ", wking)
         #b = self.board.black_count
         #w = self.board.white_count
         #print("black:",b," white:",w)

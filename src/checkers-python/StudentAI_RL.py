@@ -110,10 +110,9 @@ class StudentAI():
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
         #move = moves[index][inner_index]
-        #print(moves)
+
         ql = QLearning()
         move = ql.make_action(self.board, moves)
-        #move = self.monte_carlo_tree([m for chess in moves for m in chess], 10, 10)
         self.board.make_move(move, self.color)
         self.movecount += 1
         return move

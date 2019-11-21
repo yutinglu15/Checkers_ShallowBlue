@@ -12,6 +12,7 @@ class Node():
         self.win = 0
         self.visit = 0
         self.turn = turn
+        self.move = None
 
 
     def ucb(self, c):
@@ -27,18 +28,21 @@ class MonteCarloTree():
         self.root = Node(board, None, self.color)
         self.states = {str(self.board.board): self.root} # {board: node}
 
-    def get_action(self, simulate_time):
+    def get_action(self, simulate_time, reward):
         # curr_move = self.select(self.root, self.color)
         t = 0
+        self.reward = reward
         start_time = time.time()
+        children = self.select(self.root, self.color)
         while time.time() - start_time < simulate_time:
-            select_node = self.select(self.root, self.root.turn)
-            w = self.simulate(select_node.board, select_node.turn)
+            select_node = self.best_child(children)
+            # select_node = self.select(self.root, self.root.turn)
+            w = self.simulate(select_node.board, select_node.turn, reward)
             self.backpropagate(select_node, w)
             t += 1
         print(t)
         # select the best child
-        best_move = self.select(self.root, self.color).move
+        best_move = self.best_child(children).move
 
         return best_move
 
@@ -46,10 +50,10 @@ class MonteCarloTree():
 
     # random roll a move
     def rollout(self, moves):
-        index = randint(0,len(moves)-1)
-        inner_index = randint(0,len(moves[index])-1)
-        move = moves[index][inner_index]
-        return move
+        # index = randint(0,len(moves)-1)
+        # inner_index = randint(0,len(moves[index])-1)
+        # move = moves[index][inner_index]
+        return moves[randint(0, len(moves)-1)]
 
 
 
@@ -73,66 +77,34 @@ class MonteCarloTree():
         for chess in moves:
             for move in chess:
                 board.make_move(move, turn)
-
-                # if we have seen this board
-                if str(board.board)+str(turn) in self.states:
-                    children.append(self.states[str(board.board)+str(turn)])
-                    board.undo()
-                    continue
-
-                # else we expand and simulate
                 child = Node(board, node, turn)
-                child.move = move  # get the board with which move
+                child.move = move # get the board with which move
                 children.append(child)
                 self.states[str(board.board)+str(turn)] = child
 
-                win = self.simulate(board, turn)
+                win = self.simulate(board, turn, self.reward)
                 child.win = win
                 child.visit = 1
                 self.backpropagate(child, win)
 
                 board.undo()
-
-        return self.best_child(children)
-
-
-    # # not sure about how to implement it yet...
-    # def expand(self):
-    #     board = self.board
-    #     t = 0
-    #     curr_node = self.get_node(board)
-    #     while curr_node:
-    #         moves = board.get_all_possible_moves(self.color)
-    #         move = self.rollout(moves)
-    #         board.make_move(move, self.color)
-    #         t += 1
-    #
-    #         moves = board.get_all_possible_moves(self.opponent[self.color])
-    #         move = self.rollout(moves)
-    #         board.make_move(move, self.opponent[self.color])
-    #         t += 1
-    #
-    #         curr_node = self.get_node(board)
-    #
-    #     # now curr_node is unexplored
-    #     curr_node = Node(board)
-    #
-    #     self.undo(board, t)
+        return children
+ #       return self.best_child(children)
 
 
     # simulate the game with a start move
-    def simulate(self, board, color):
+    def simulate(self, board, color, reward):
         curr_turn = self.opponent[color]
         t = 0
         moves = [m for chess in board.get_all_possible_moves(curr_turn) for m in chess]
-        while len(moves) == 0 and t < 20:
+        while len(moves) == 0 and t < 30:
             move = self.rollout(moves)
             board.make_move(move, curr_turn)
             curr_turn = self.opponent[curr_turn]
             moves = [m for chess in board.get_all_possible_moves(curr_turn) for m in chess]
             t += 1
         self.undo(board, t)
-        return 1 if curr_turn == self.opponent[color] else 0 if t < 20 else 0.2
+        return reward[0] if curr_turn == self.opponent[color] else reward[2] if t < 30 else reward[1]
 
 
     def backpropagate(self, node, win):
@@ -172,6 +144,6 @@ class StudentAI():
         # inner_index =  randint(0,len(moves[index])-1)
         # move = moves[index][inner_index]
         mct = MonteCarloTree(self.board, moves, self.color, self.opponent)
-        move = mct.get_action(10)
+        move = mct.get_action(10, (1,0,0))
         self.board.make_move(move, self.color)
         return move

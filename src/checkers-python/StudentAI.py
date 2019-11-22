@@ -4,7 +4,10 @@ from BoardClasses import Board
 import math
 import copy
 import random
+
+import time
 #import numpy as np
+
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -20,6 +23,10 @@ class StudentAI():
         self.opponent = {1:2,2:1}
         self.color = 2
 
+        ##
+        self.movecount = 1
+
+
         # new params
         '''
             new data clearification:
@@ -27,28 +34,31 @@ class StudentAI():
                                     ...
                                     [X1m, X2m, ..., X_feature_size_m, Y]]
         '''
-        self.movecount = 2
-        self.feature_size = 5
+        #self.movecount = 2
+        #self.feature_size = 5
         #self.thetas = np.random.rand(self.feature_size)
         #self.feature_matrix = np.empty((0, self.feature_size))
 
+
     def get_move(self, move):
         #print(self.color)
+        self.time = time.time()
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
 
+
         #self.train()
         #self.simulate_lr(self.color)
+
 
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
         #move = moves[index][inner_index]
         #print(moves)
-        move = self.minimax_move(moves)
-        #move = self.monte_carlo_tree([m for chess in moves for m in chess], 10, 10)
+        move = moves[0][0] if len(moves) == 1 and len(moves[0]) == 1 else self.minimax_move(moves)
         self.board.make_move(move, self.color)
         self.movecount += 1
         return move
@@ -65,13 +75,13 @@ class StudentAI():
                     max_value = val
                 elif val == max_value:
                     best.append(move)
-        if len(best) == 1:
-            return best[randint(0,len(best)-1)]
-        #print(len(best))
-        return self.monte_carlo_tree(best, 10, 10)
+        return best[randint(0,len(best)-1)]
+        # if len(best) == 1:
+        #     return best[0]
+        # return self.monte_carlo_tree(best, 10, 100)
 
     def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
-        best_uct = 0
+        best_uct = - math.inf
         best_move = 0
         for move in moves:
             wins = self.simulate(move, simulate_times)
@@ -82,11 +92,15 @@ class StudentAI():
 
     def simulate(self, move, s):
         wins = 0
-        board = copy.deepcopy(self.board)
+        board = self.board
         board.make_move(move, self.color)
         for i in range(s):
             curr_turn = self.opponent[self.color]
             t = 0
+
+            moves = board.get_all_possible_moves(curr_turn)
+            while len(moves) > 0 and t <= 30:
+
             for turn in range(20):
                 if board.is_win(self.color) == self.color:
                     wins = 1
@@ -96,15 +110,16 @@ class StudentAI():
                     self.undo(board, t)
                     break
                 moves = board.get_all_possible_moves(curr_turn)
+
                 index = randint(0,len(moves)-1)
                 inner_index = randint(0,len(moves[index])-1)
                 board.make_move(moves[index][inner_index], curr_turn)
                 curr_turn = self.opponent[curr_turn]
+                moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            else:
-                wins = 0.5
-                self.undo(board, t)
-
+            wins += 1 if board.is_win(curr_turn) == self.color else -1
+            self.undo(board, t)
+        board.undo()
         return wins
 
     def undo(self, board, times):
@@ -113,13 +128,25 @@ class StudentAI():
 
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
-        if depth == 0:
-            u = self.utility(self.board)
-            #u = self.utility_with_theta(self.board)
+
+        if depth == 0 or time.time() - self.time > 8:
+            u = self.utility(self.board, depth)
             self.board.undo()
             return u
+        moves = self.board.get_all_possible_moves(self.color)
+        if len(moves) == 0:
+            u = self.utility(self.board, depth)
+            w = self.board.is_win(self.opponent[self.color])
+            u += 0 if w == 0 else 10 if w == self.color else -10
+
+#         if depth == 0:
+#             u = self.utility(self.board)
+#             #u = self.utility_with_theta(self.board)
+
+#             self.board.undo()
+#             return u
         min_val = math.inf
-        for chess in self.board.get_all_possible_moves(self.color):
+        for chess in moves:
             for move in chess:
                 min_val = min(self.max_value(move, depth - 1, alpha, beta), min_val)
                 beta = min(beta, min_val)
@@ -131,13 +158,25 @@ class StudentAI():
 
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
-        if depth == 0:
-            u = self.utility(self.board)
-            #u = self.utility_with_theta(self.board)
+
+        if depth == 0 or time.time() - self.time > 8:
+            u = self.utility(self.board, depth)
+            self.board.undo()
+            return u
+        moves = self.board.get_all_possible_moves(self.opponent[self.color])
+        if len(moves) == 0:
+            u = self.utility(self.board, depth)
+            w = self.board.is_win(self.color)
+            u += 0 if w == 0 else 10 if w == self.color else -10
+
+#         if depth == 0:
+#             u = self.utility(self.board)
+#             #u = self.utility_with_theta(self.board)
+
             self.board.undo()
             return u
         max_val = - math.inf
-        for chess in self.board.get_all_possible_moves(self.opponent[self.color]):
+        for chess in moves:
             for move in chess:
                 max_val = max(self.min_value(move, depth - 1, alpha, beta), max_val)
                 alpha = max(alpha, max_val)
@@ -147,30 +186,27 @@ class StudentAI():
         self.board.undo()
         return max_val
 
-    def utility(self, board):
-        bking, wking = 0, 0
-        for r in range(self.board.row):
-            for c in range(self.board.col):
-                if self.board.board[r][c].color == "B":
-                    bking += self.board.board[r][c].is_king
-                elif self.board.board[r][c].color == "W":
-                    wking += self.board.board[r][c].is_king
 
-        bback = sum(self.board.board[0][i].color == "B" for i in range(self.board.col))
-        wback = sum(self.board.board[self.board.row-1][i].color == "W" for i in range(self.board.col))
-        # implement a diagnal heuristic
-        bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
-        wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
+    def utility(self, board, depth):
+        u = 0
+        # u = board.is_win(self.color)
+        # u = 0 if u == 0 else 10 if u == 2 else -10
+        if self.movecount + depth < 15:
+            time_param = math.log(self.movecount) + depth
+            # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
+            #     self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
+            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
+        elif self.movecount + depth > 35:
+            # time_param = math.log(self.movecount) + 1
+            u += self.wcount_bcount(board) # + self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
+        else:
+            time_param = math.log(self.movecount) + depth
+            u += self.wcount_bcount(board) + self.wking_bking(board)
+            # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
+            #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
+        return u if self.color == 2 else -u
 
-        time_param = math.log(self.movecount)
-        b = self.board.black_count + bking #* time_param + bback * (1/time_param) + bedge * (1/time_param)
-        print("bking: ", bking)
-        w = self.board.white_count + wking #* time_param + wback * (1/time_param) + wedge * (1/time_param)
-        print("wking: ", wking)
-        #b = self.board.black_count
-        #w = self.board.white_count
-        #print("black:",b," white:",w)
-        return b-w if self.color == 1 else w-b
+
 
 
     ####################################################
@@ -182,10 +218,12 @@ class StudentAI():
         b = X_black.dot(self.thetas)
         w = X_white.dot(self.thetas)
 
-        return b - w if self.color == 1 else w - b
+
+    def wcount_bcount(self, board):
+        return board.white_count - board.black_count
 
 
-    def get_X(self, board):
+    def wking_bking(self, board):
         bking, wking = 0, 0
         for r in range(self.board.row):
             for c in range(self.board.col):
@@ -193,114 +231,23 @@ class StudentAI():
                     bking += self.board.board[r][c].is_king
                 elif self.board.board[r][c].color == "W":
                     wking += self.board.board[r][c].is_king
+        return wking - bking
 
-        bback = sum(self.board.board[0][i].color == "B" for i in range(self.board.col))
-        wback = sum(self.board.board[self.board.row-1][i].color == "W" for i in range(self.board.col))
+    def wback_bback(self, board):
+        bback = sum(board.board[0][i].color == "B" for i in range(board.col))
+        wback = sum(board.board[board.row - 1][i].color == "W" for i in range(board.col))
+        return wback - bback
 
-        bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
-        wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
+    def wedge_bedge(self, board):
+        bedge = sum(
+            board.board[i][0].color == "B" + board.board[i][board.col - 1].color == "B" for i in
+            range(board.row))
+        wedge = sum(
+            board.board[i][0].color == "W" + board.board[i][board.col - 1].color == "W" for i in
+            range(board.row))
+        return wedge - bedge
 
-        X_black = np.array([self.board.black_count, bking, bback, bedge, self.movecount])
-        X_white = np.array([self.board.white_count, wking, wback, wedge, self.movecount])
-
-        return X_black, X_white
-
-    # def model(self, X, thetas):
-    #     # X = [count, king, back, edge, time]
-    #     # thetas = [t1, t2, t3, t4, t5]
-    #     #return thetas[0] * X[0] + thetas[1] * X[1] + thetas[2] * X[2] + thetas[3] * X[3] + thetas[4] * X[4]
-    #     return X*thetas
-
-
-    def train(self):
-        # TODO: Training thetas by linear regression and mean square error gradient descent
-        self.thetas = np.random.rand(5)
-
-        epoch = 0.01
-        alpha = 0.05
-
-        while True:
-            thetas = thetas - self.Gradient() * alpha
-            if self.Gradient() * alpha < epoch:
-                break
-
-        return thetas
-
-    def simulate_times(self, color, simulate_times):
-        wins = 0
-        for _ in simulate_times:
-            wins += self.simulate_lr(color)
-
-        return wins
-
-    def simulate_lr(self, color):
-        # simulate one time
-        # record all X features to feature_matrix
-        # update the y value accordingly
-
-        print("entering simulations")
-        newboard = Board(self.col, self.row, self.p)
-        newboard.initialize_game()
-
-        feature_list_b = []
-        feature_list_w = []
-
-        win = 0
-        ### TODO: Fixing Current move in a new board
-        curr_turn = self.opponent[color]
-
-        for turn in range(50):
-            if newboard.is_win(color) == color:
-                win = 1
-                break
-            elif newboard.is_win(self.opponent[color]) == self.opponent[color]:
-                break
-            move = self.minimax_move(newboard.get_all_possible_moves(curr_turn))
-            newboard.make_move(move, curr_turn)
-
-            b, w = self.get_X(self.board)
-            feature_list_b.append(b)
-            feature_list_w.append(w)
-
-            self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
-            print(self.feature_matrix)
-            curr_turn = self.opponent[curr_turn]
-
-        else:
-            win = 0.5
-
-        # matrix = np.array([feature_list_b, feature_list_w])
-        # feature_matrix = np.hstack((matrix, np.zeros((matrix.shape[0], 1))))
-
-        # TODO: Fixing y value update
-        if win == 1 and color == 1:
-            for fb in feature_list_b:
-                index = np.where(fb in self.feature_matrix[:, 0:self.feature_size])
-                if index == []:
-                    self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
-                self.feature_matrix[index, self.feature_size] += 1
-
-        elif win == 0 and color == 1:
-            for fw in feature_list_w:
-                index = np.where(fw in self.feature_matrix[:, 0:self.feature_size])
-                if index == []:
-                    self.feature_matrix = np.append(self.feature_matrix, np.array([b, w]), axis=0)
-                self.feature_matrix[index, self.feature_size] += 1
-
-        return win
-
-    def MSE(self, thetas):
-        # TODO: get mean square error by simulation
-        wins = self.simulate_times(self.color, 20)
-
-        utility = self.model(self.get_X(self.board), thetas)
-
-
-
-    def Gradient(self, mse):
-        # TODO: calculate gradient according to mse
-        pass
-
-    def move_by_qtable(self):
-        # TODO: maybe write a function to choose move from feature matrix accordingly
-        pass
+    def wdiagonal_bdiagonal(self, board):
+        bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row))
+        wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row))
+        return wdiagonal - bdiagonal

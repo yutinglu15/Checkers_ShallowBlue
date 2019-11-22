@@ -51,7 +51,7 @@ class StudentAI():
                     best.append(move)
         if len(best) == 1:
             return best[0]
-        return self.monte_carlo_tree(best, 10, 10)
+        return self.monte_carlo_tree(best, 10, 100)
 
     def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
         best_uct = 0
@@ -90,8 +90,7 @@ class StudentAI():
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
         if depth == 0:
-            #u = self.utility(self.board)
-            u = self.utility(self.board)
+            u = self.utility(self.board, depth)
             self.board.undo()
             return u
         min_val = math.inf
@@ -108,8 +107,7 @@ class StudentAI():
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
         if depth == 0:
-            #u = self.utility(self.board)
-            u = self.utility(self.board)
+            u = self.utility(self.board, depth)
             self.board.undo()
             return u
         max_val = - math.inf
@@ -123,12 +121,22 @@ class StudentAI():
         self.board.undo()
         return max_val
 
-    def utility(self, board):
-        time_param = math.log(self.movecount) + 1
-        u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
-            self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
-        # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param
-
+    def utility(self, board, depth):
+        # u = -10 if not board.is_win(self.color) == self.color else 10
+        u = 0
+        if self.movecount + depth < 15:
+            time_param = math.log(self.movecount) + 1
+            # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
+            #     self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
+            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
+        elif self.movecount + depth > 35:
+            # time_param = math.log(self.movecount) + 1
+            u += self.wcount_bcount(board) # + self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
+        else:
+            time_param = math.log(self.movecount) + 1
+            u += self.wcount_bcount(board) + self.wking_bking(board)
+            # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
+            #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
         return u if self.color == 2 else -u
 
     def wcount_bcount(self, board):

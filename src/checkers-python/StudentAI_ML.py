@@ -32,6 +32,7 @@ class StudentAI():
         self.thetas = np.random.rand(self.feature_size)
         self.feature_matrix = np.empty((0, self.feature_size))
 
+
     def get_move(self, move):
         #print(self.color)
         if len(move) != 0:
@@ -39,6 +40,12 @@ class StudentAI():
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
+
+    def make_action(self,state):
+        # TODO: implement this to return action with max Q value
+        for a in get_all_action(state):
+            return action with max(self.Q_table[state, action])
+
 
         #self.train()
         self.simulate_lr(self.color)
@@ -70,6 +77,13 @@ class StudentAI():
         # print(len(best))
         # best[randint(0,len(best)-1)]
         return self.monte_carlo_tree(best, 10, 10)
+
+    def explore(self, state):
+        epsilon = 0.2
+        if random.uniform(0,1) < epsilon:
+            # TODO : implement select random move
+        else:
+            # TODO: implement explore max reward
 
     def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
         best_uct = 0
@@ -108,9 +122,19 @@ class StudentAI():
 
         return wins
 
+
     def undo(self, board, times):
         for _ in range(times):
             board.undo()
+
+    def train_one_episode(self):
+        # This is training function for one episode, start a new board and
+        # update Q value until win or loss
+        # QUESTION IS HOW TO DECIDE OPPONENT MOVE? BY SELF-TRAIN? AND HOW TO SELF-TRAIN?
+        new_board = Board()
+        new_board.initialize_game()
+        turn = ''
+
 
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])

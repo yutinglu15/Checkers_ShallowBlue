@@ -206,10 +206,10 @@ class StudentAI():
             move = moves[0][0]
         if self.count < 15:
             mct = MonteCarloTree(self.board, self.color, self.opponent, (10, 0, -10))
-            move = mct.get_action(10, 2)
+            move = mct.get_action(10, 0)
             self.board.make_move(move, self.color)
         else:
             mct = MonteCarloTree(self.board, self.color, self.opponent, (10, 0, -10))
-            move = mct.get_action(10, 1)
+            move = mct.get_action(10, 0)
             self.board.make_move(move, self.color)
         return move

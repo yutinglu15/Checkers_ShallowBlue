@@ -40,7 +40,7 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 6
+        depth = 7
         for chess in moves:
             for move in chess:
                 val = self.max_value(move, depth, -math.inf, math.inf)
@@ -78,7 +78,7 @@ class StudentAI():
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            wins += -1 if board.is_win(self.turn) != self.turn else 1
+            wins += -1 if board.is_win(self.color) != self.color else 1
             self.undo(board, t)
         board.undo()
         return wins

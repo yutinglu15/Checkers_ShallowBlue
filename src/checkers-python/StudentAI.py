@@ -4,6 +4,7 @@ from BoardClasses import Board
 import math
 import copy
 import random
+import time
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -23,6 +24,7 @@ class StudentAI():
 
     def get_move(self, move):
         #print(self.color)
+        self.time = time.time()
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
@@ -40,7 +42,7 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 7
+        depth = 5
         for chess in moves:
             for move in chess:
                 val = self.max_value(move, depth, -math.inf, math.inf)
@@ -78,7 +80,7 @@ class StudentAI():
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            wins += -1 if board.is_win(self.color) != self.color else 1
+            wins += 1 if board.is_win(curr_turn) == self.color else -1
             self.undo(board, t)
         board.undo()
         return wins
@@ -89,12 +91,19 @@ class StudentAI():
 
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
-        if depth == 0:
+        if depth == 0 or time.time() - self.time > 8:
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+        moves = self.board.get_all_possible_moves(self.color)
+        if len(moves) == 0:
+            u = self.utility(self.board, depth)
+            w = self.board.is_win(self.opponent[self.color])
+            u += 0 if w == 0 else 10 if w == self.color else -10
+            self.board.undo()
+            return u
         min_val = math.inf
-        for chess in self.board.get_all_possible_moves(self.color):
+        for chess in moves:
             for move in chess:
                 min_val = min(self.max_value(move, depth - 1, alpha, beta), min_val)
                 beta = min(beta, min_val)
@@ -106,12 +115,19 @@ class StudentAI():
 
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
-        if depth == 0:
+        if depth == 0 or time.time() - self.time > 8:
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+        moves = self.board.get_all_possible_moves(self.opponent[self.color])
+        if len(moves) == 0:
+            u = self.utility(self.board, depth)
+            w = self.board.is_win(self.color)
+            u += 0 if w == 0 else 10 if w == self.color else -10
+            self.board.undo()
+            return u
         max_val = - math.inf
-        for chess in self.board.get_all_possible_moves(self.opponent[self.color]):
+        for chess in moves:
             for move in chess:
                 max_val = max(self.min_value(move, depth - 1, alpha, beta), max_val)
                 alpha = max(alpha, max_val)
@@ -122,10 +138,11 @@ class StudentAI():
         return max_val
 
     def utility(self, board, depth):
-        # u = -10 if not board.is_win(self.color) == self.color else 10
         u = 0
+        # u = board.is_win(self.color)
+        # u = 0 if u == 0 else 10 if u == 2 else -10
         if self.movecount + depth < 15:
-            time_param = math.log(self.movecount) + 1
+            time_param = math.log(self.movecount) + depth
             # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
             #     self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
             u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
@@ -133,7 +150,7 @@ class StudentAI():
             # time_param = math.log(self.movecount) + 1
             u += self.wcount_bcount(board) # + self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
         else:
-            time_param = math.log(self.movecount) + 1
+            time_param = math.log(self.movecount) + depth
             u += self.wcount_bcount(board) + self.wking_bking(board)
             # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
             #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)

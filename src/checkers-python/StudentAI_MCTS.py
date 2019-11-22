@@ -117,7 +117,7 @@ class MonteCarloTree():
                 t += 1
             # win += self.reward[0] if board.is_win(self.turn) == self.turn else self.reward[2] if t < 30 else \
             # self.reward[1]
-            win += self.reward[2] if board.is_win(self.turn) != self.turn else self.reward[0]
+            win += self.reward[2] if board.is_win(curr_turn) != self.turn else self.reward[0]
             win += board.white_count - board.black_count if self.turn == 2 else board.black_count - board.white_count
             win += self.wking_bking(board) if self.turn == 2 else -self.wking_bking(board)
             self.undo(board, t-1)

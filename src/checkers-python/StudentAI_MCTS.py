@@ -43,7 +43,6 @@ class MonteCarloTree():
         t = 0
         start_time = time.time()
         children = self.expand(self.root) # get the children of root
-        print(children)
         while time.time() - start_time < simulate_time:
             # select the best child
             best_child = self.best_child(children)
@@ -116,9 +115,11 @@ class MonteCarloTree():
                 curr_turn = self.opponent[curr_turn]
                 moves = self.get_moves(board, curr_turn)
                 t += 1
-                # win += self.reward[0] if board.is_win(self.turn) == self.turn else self.reward[2] if t < 30 else \
-                # self.reward[1]
-                win += board.white_count - board.black_count if self.turn == 2 else board.black_count - board.white_count
+            # win += self.reward[0] if board.is_win(self.turn) == self.turn else self.reward[2] if t < 30 else \
+            # self.reward[1]
+            win += self.reward[2] if board.is_win(self.turn) != self.turn else self.reward[0]
+            win += board.white_count - board.black_count if self.turn == 2 else board.black_count - board.white_count
+            win += self.wking_bking(board) if self.turn == 2 else -self.wking_bking(board)
             self.undo(board, t-1)
         return win, simulate_times
 
@@ -168,6 +169,16 @@ class MonteCarloTree():
                 result += str(chess.color)
         return result
 
+    def wking_bking(self, board):
+        bking, wking = 0, 0
+        for r in range(board.row):
+            for c in range(board.col):
+                if board.board[r][c].color == "B":
+                    bking += board.board[r][c].is_king
+                elif board.board[r][c].color == "W":
+                    wking += board.board[r][c].is_king
+        return wking - bking
+
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 class StudentAI():
@@ -181,6 +192,7 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
+        self.count = 0
     def get_move(self,move):
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
@@ -190,7 +202,14 @@ class StudentAI():
         # index = randint(0,len(moves)-1)
         # inner_index =  randint(0,len(moves[index])-1)
         # move = moves[index][inner_index]
-        mct = MonteCarloTree(self.board, self.color, self.opponent, (1, 0, -1))
-        move = mct.get_action(10, 2)
-        self.board.make_move(move, self.color)
+        if len(moves) == 1 and len(moves[0]) == 1:
+            move = moves[0][0]
+        if self.count < 15:
+            mct = MonteCarloTree(self.board, self.color, self.opponent, (10, 0, -10))
+            move = mct.get_action(10, 2)
+            self.board.make_move(move, self.color)
+        else:
+            mct = MonteCarloTree(self.board, self.color, self.opponent, (10, 0, -10))
+            move = mct.get_action(10, 1)
+            self.board.make_move(move, self.color)
         return move

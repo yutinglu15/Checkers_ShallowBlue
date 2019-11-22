@@ -40,7 +40,7 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 4
+        depth = 6
         for chess in moves:
             for move in chess:
                 val = self.max_value(move, depth, -math.inf, math.inf)
@@ -65,7 +65,7 @@ class StudentAI():
 
     def simulate(self, move, s):
         wins = 0
-        board = copy.deepcopy(self.board)
+        board = self.board
         board.make_move(move, self.color)
         for i in range(s):
             curr_turn = self.opponent[self.color]
@@ -78,9 +78,9 @@ class StudentAI():
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            wins += 1 if curr_turn == self.color else 0
+            wins += -1 if board.is_win(self.turn) != self.turn else 1
             self.undo(board, t)
-
+        board.undo()
         return wins
 
     def undo(self, board, times):
@@ -124,6 +124,18 @@ class StudentAI():
         return max_val
 
     def utility(self, board):
+        time_param = math.log(self.movecount) + 1
+        u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
+            self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
+        # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param
+
+        return u if self.color == 2 else -u
+
+    def wcount_bcount(self, board):
+        return board.white_count - board.black_count
+
+
+    def wking_bking(self, board):
         bking, wking = 0, 0
         for r in range(self.board.row):
             for c in range(self.board.col):
@@ -131,19 +143,23 @@ class StudentAI():
                     bking += self.board.board[r][c].is_king
                 elif self.board.board[r][c].color == "W":
                     wking += self.board.board[r][c].is_king
+        return wking - bking
 
-        bback = sum(self.board.board[0][i].color == "B" for i in range(self.board.col))
-        wback = sum(self.board.board[self.board.row-1][i].color == "W" for i in range(self.board.col))
+    def wback_bback(self, board):
+        bback = sum(board.board[0][i].color == "B" for i in range(board.col))
+        wback = sum(board.board[board.row - 1][i].color == "W" for i in range(board.col))
+        return wback - bback
 
-        bedge = sum(self.board.board[i][0].color == "B"+self.board.board[i][self.board.col-1].color == "B" for i in range(self.board.row))
-        wedge = sum(self.board.board[i][0].color == "W"+self.board.board[i][self.board.col-1].color == "W" for i in range(self.board.row))
+    def wedge_bedge(self, board):
+        bedge = sum(
+            board.board[i][0].color == "B" + board.board[i][board.col - 1].color == "B" for i in
+            range(board.row))
+        wedge = sum(
+            board.board[i][0].color == "W" + board.board[i][board.col - 1].color == "W" for i in
+            range(board.row))
+        return wedge - bedge
 
-        time_param = math.log(self.movecount) + 1
-        b = 3*self.board.black_count + bking * time_param + bback * (1/time_param) + bedge * (1/time_param)
-        w = 3*self.board.white_count + wking * time_param + wback * (1/time_param) + wedge * (1/time_param)
-        # b = self.board.black_count
-        # w = self.board.white_count
-        #print("black:",b," white:",w)
-        return b-w if self.color == 1 else w-b
-
-
+    def wdiagonal_bdiagonal(self, board):
+        bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row))
+        wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row))
+        return wdiagonal - bdiagonal

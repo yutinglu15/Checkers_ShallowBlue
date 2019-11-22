@@ -4,7 +4,10 @@ from BoardClasses import Board
 import math
 import copy
 import random
+
 import time
+#import numpy as np
+
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -19,8 +22,23 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
+
         ##
         self.movecount = 1
+
+
+        # new params
+        '''
+            new data clearification:
+                feature_matrix = [[X1, X2, ..., X_feature_size, Y],
+                                    ...
+                                    [X1m, X2m, ..., X_feature_size_m, Y]]
+        '''
+        #self.movecount = 2
+        #self.feature_size = 5
+        #self.thetas = np.random.rand(self.feature_size)
+        #self.feature_matrix = np.empty((0, self.feature_size))
+
 
     def get_move(self, move):
         #print(self.color)
@@ -30,6 +48,12 @@ class StudentAI():
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
+
+
+        #self.train()
+        #self.simulate_lr(self.color)
+
+
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
         #move = moves[index][inner_index]
@@ -73,10 +97,22 @@ class StudentAI():
         for i in range(s):
             curr_turn = self.opponent[self.color]
             t = 0
+
             moves = board.get_all_possible_moves(curr_turn)
             while len(moves) > 0 and t <= 30:
+
+            for turn in range(20):
+                if board.is_win(self.color) == self.color:
+                    wins = 1
+                    self.undo(board, t)
+                    break
+                elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
+                    self.undo(board, t)
+                    break
+                moves = board.get_all_possible_moves(curr_turn)
+
                 index = randint(0,len(moves)-1)
-                inner_index =  randint(0,len(moves[index])-1)
+                inner_index = randint(0,len(moves[index])-1)
                 board.make_move(moves[index][inner_index], curr_turn)
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
@@ -92,6 +128,7 @@ class StudentAI():
 
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
+
         if depth == 0 or time.time() - self.time > 8:
             u = self.utility(self.board, depth)
             self.board.undo()
@@ -101,8 +138,13 @@ class StudentAI():
             u = self.utility(self.board, depth)
             w = self.board.is_win(self.opponent[self.color])
             u += 0 if w == 0 else 10 if w == self.color else -10
-            self.board.undo()
-            return u
+
+#         if depth == 0:
+#             u = self.utility(self.board)
+#             #u = self.utility_with_theta(self.board)
+
+#             self.board.undo()
+#             return u
         min_val = math.inf
         for chess in moves:
             for move in chess:
@@ -116,6 +158,7 @@ class StudentAI():
 
     def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.color)
+
         if depth == 0 or time.time() - self.time > 8:
             u = self.utility(self.board, depth)
             self.board.undo()
@@ -125,6 +168,11 @@ class StudentAI():
             u = self.utility(self.board, depth)
             w = self.board.is_win(self.color)
             u += 0 if w == 0 else 10 if w == self.color else -10
+
+#         if depth == 0:
+#             u = self.utility(self.board)
+#             #u = self.utility_with_theta(self.board)
+
             self.board.undo()
             return u
         max_val = - math.inf
@@ -137,6 +185,7 @@ class StudentAI():
                     return max_val
         self.board.undo()
         return max_val
+
 
     def utility(self, board, depth):
         u = 0
@@ -156,6 +205,19 @@ class StudentAI():
             # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
             #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
         return u if self.color == 2 else -u
+
+
+
+
+    ####################################################
+    ### Training heuristics using Linear Regression ####
+    ####################################################
+
+    def utility_with_theta(self, board):
+        X_black, X_white = self.get_X(board)
+        b = X_black.dot(self.thetas)
+        w = X_white.dot(self.thetas)
+
 
     def wcount_bcount(self, board):
         return board.white_count - board.black_count

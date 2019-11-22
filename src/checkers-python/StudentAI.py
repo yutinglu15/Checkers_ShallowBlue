@@ -51,12 +51,13 @@ class StudentAI():
                     max_value = val
                 elif val == max_value:
                     best.append(move)
-        if len(best) == 1:
-            return best[0]
-        return self.monte_carlo_tree(best, 10, 100)
+        return best[randint(0,len(best)-1)]
+        # if len(best) == 1:
+        #     return best[0]
+        # return self.monte_carlo_tree(best, 10, 100)
 
     def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
-        best_uct = 0
+        best_uct = - math.inf
         best_move = 0
         for move in moves:
             wins = self.simulate(move, simulate_times)

@@ -43,15 +43,16 @@ class MonteCarloTree():
         t = 0
         start_time = time.time()
         children = self.expand(self.root) # get the children of root
+        print(children)
         while time.time() - start_time < simulate_time:
             # select the best child
             best_child = self.best_child(children)
             # keep select the best way from the starting best child until reach a leaf
             select_node = self.select(best_child, depth)
             # simulate that leaf node
-            w = self.simulate(select_node.board, select_node.turn)
+            w, s = self.simulate(select_node.board, select_node.turn)
             # update the information
-            self.backpropagate(select_node, w)
+            self.backpropagate(select_node, w, s)
             t += 1
         print(t)
         # select the best child
@@ -64,7 +65,10 @@ class MonteCarloTree():
         '''select the node'''
         if depth <= 0:
             return node
-        child = self.best_child(self.expand(node))
+        children = self.expand(node)
+        if len(children) == 0:
+            return node
+        child = self.best_child(children)
         return self.select(child, depth - 1)
 
  #       return self.best_child(children)
@@ -78,53 +82,58 @@ class MonteCarloTree():
         children = []
         for move in moves:
             board.make_move(move, turn)
-
-            str_board = str(board.board)
+            str_board = self.board_to_str(board)
             # if the board not states, simulate it
             if str_board not in self.states or turn not in self.states[str_board]:
                 child = Node(board, node, self.opponent[turn])  # save the turn that can get move from this board
                 child.move = move  # get the board with which move
                 self.states[str_board][turn] = child
-                win = self.simulate(board, turn)
+                win, simulate_times = self.simulate(board, turn)
                 child.win = win
-                child.visit = 1
-                self.backpropagate(child, win)
+                child.visit = simulate_times
+                self.backpropagate(child, win, simulate_times)
+                children.append(child)
             # else, get the board
             else:
                 child = self.states[str_board][turn]
-            children.append(child)
+                children.append(child)
 
             board.undo()
+        # assert len(children) != 0, "Expand no child, Impossible!"
         return children
 
 
     # simulate the game with a start move
-    def simulate(self, board, turn):
-        curr_turn = turn
-        t = 1
-        moves = self.get_moves(board, curr_turn)
-        while len(moves) > 0 and t < 30:
-            move = self.rollout(moves)
-            board.make_move(move, curr_turn)
-            curr_turn = self.opponent[curr_turn]
+    def simulate(self, board, turn, simulate_times = 10):
+        win = 0
+        for _ in range(simulate_times):
+            curr_turn = turn
+            t = 1
             moves = self.get_moves(board, curr_turn)
-            t += 1
-        self.undo(board, t-1)
-        return self.reward[0] if curr_turn == self.opponent[turn] else self.reward[2] if t < 30 else self.reward[1]
+            while len(moves) > 0 and t < 30:
+                move = self.rollout(moves)
+                board.make_move(move, curr_turn)
+                curr_turn = self.opponent[curr_turn]
+                moves = self.get_moves(board, curr_turn)
+                t += 1
+                # win += self.reward[0] if board.is_win(self.turn) == self.turn else self.reward[2] if t < 30 else \
+                # self.reward[1]
+                win += board.white_count - board.black_count if self.turn == 2 else board.black_count - board.white_count
+            self.undo(board, t-1)
+        return win, simulate_times
 
-
-    def backpropagate(self, node, win):
+    def backpropagate(self, node, win, simulate_times):
         '''Update the new information back to the parents and root'''
         if not node.parent:
             return
         node.parent.win += win
-        node.parent.visit += 1
-        self.backpropagate(node.parent, win)
+        node.parent.visit += simulate_times
+        self.backpropagate(node.parent, win, simulate_times)
 
 
     def best_child(self, children):
         '''Use ucb to select the best child'''
-        best_ucb = 0
+        best_ucb = - math.inf
         best_node = []
         for child in children:
             ucb = child.ucb(1.4, child.turn)
@@ -133,6 +142,7 @@ class MonteCarloTree():
                 best_node = [child]
             elif ucb == best_ucb:
                 best_node.append(child)
+        assert len(best_node) != 0
         return best_node[randint(0,len(best_node)-1)]
 
 
@@ -151,7 +161,12 @@ class MonteCarloTree():
         for _ in range(times):
             board.undo()
 
-
+    def board_to_str(self, board):
+        result = ''
+        for row in board.board:
+            for chess in row:
+                result += str(chess.color)
+        return result
 
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -175,7 +190,7 @@ class StudentAI():
         # index = randint(0,len(moves)-1)
         # inner_index =  randint(0,len(moves[index])-1)
         # move = moves[index][inner_index]
-        mct = MonteCarloTree(self.board, self.color, self.opponent, (1,0.5,0))
+        mct = MonteCarloTree(self.board, self.color, self.opponent, (1, 0, -1))
         move = mct.get_action(10, 2)
         self.board.make_move(move, self.color)
         return move

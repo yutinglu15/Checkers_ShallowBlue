@@ -81,24 +81,13 @@ class StudentAI():
 
             moves = board.get_all_possible_moves(curr_turn)
             while len(moves) > 0 and t <= 30:
-
-            for turn in range(20):
-                if board.is_win(self.color) == self.color:
-                    wins = 1
-                    self.undo(board, t)
-                    break
-                elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
-                    self.undo(board, t)
-                    break
-                moves = board.get_all_possible_moves(curr_turn)
-
                 index = randint(0,len(moves)-1)
                 inner_index = randint(0,len(moves[index])-1)
                 board.make_move(moves[index][inner_index], curr_turn)
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            wins += 1 if board.is_win(curr_turn) == self.color else -1
+            wins += -1 if curr_turn == self.color else 1
             self.undo(board, t)
         board.undo()
         return wins

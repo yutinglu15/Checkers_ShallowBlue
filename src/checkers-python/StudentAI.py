@@ -22,13 +22,16 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
-
+        self.depth = 6
         self.movecount = 1
+        self.start = time.time()
 
 
     def get_move(self, move):
         #print(self.color)
         self.time = time.time()
+        if self.time - self.start > 400:
+            self.depth = 4
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
@@ -47,10 +50,9 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 6
         for chess in moves:
             for move in chess:
-                val = self.max_value(move, depth, -math.inf, math.inf)
+                val = self.max_value(move, self.depth, -math.inf, math.inf)
                 if val > max_value:
                     best = [move]
                     max_value = val
@@ -107,7 +109,7 @@ class StudentAI():
         moves = self.board.get_all_possible_moves(self.color)
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            u -= 10
+            u -= 20
             self.board.undo()
             return u
 
@@ -133,7 +135,7 @@ class StudentAI():
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            u += 10
+            u += 20
             self.board.undo()
             return u
 
@@ -151,21 +153,13 @@ class StudentAI():
 
     def utility(self, board, depth):
         u = 0
-        # u = board.is_win(self.color)
-        # u = 0 if u == 0 else 10 if u == 2 else -10
         if self.movecount + depth < 15:
-            time_param = math.log(self.movecount) + depth
-            # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
-            #     self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
-            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
+            u += self.wcount_bcount(board) + self.wking_bking(board) + self.wdis_bdis(board) * 0.5 + self.wback_bback(board) * 0.3
         elif self.movecount + depth > 35:
-            # time_param = math.log(self.movecount) + 1
             u += self.wcount_bcount(board) # + self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
         else:
-            time_param = math.log(self.movecount) + depth
-            u += self.wcount_bcount(board) + self.wking_bking(board)
-            # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
-            #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
+            time_param = math.log(self.movecount + depth)
+            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
         return u if self.color == 2 else -u
 
 
@@ -201,3 +195,18 @@ class StudentAI():
         bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row))
         wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row))
         return wdiagonal - bdiagonal
+
+
+    def wdis_bdis(self, board):
+        wdis = sum(board.row - 1 - i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "W")
+        bdis = sum(i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "B")
+        return wdis - bdis
+
+# if __name__ == '__main__':
+#
+#     def wdis_bdis(board):
+#         wdis = sum(board.row - i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "W")
+#         bdis = sum(i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "B")
+#         return wdis - bdis
+#     board = [["B","W"],["W","B"]]
+#     print(wdis_bdis(board))

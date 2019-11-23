@@ -22,37 +22,21 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
-
-        ##
+        self.depth = 6
         self.movecount = 1
-
-
-        # new params
-        '''
-            new data clearification:
-                feature_matrix = [[X1, X2, ..., X_feature_size, Y],
-                                    ...
-                                    [X1m, X2m, ..., X_feature_size_m, Y]]
-        '''
-        #self.movecount = 2
-        #self.feature_size = 5
-        #self.thetas = np.random.rand(self.feature_size)
-        #self.feature_matrix = np.empty((0, self.feature_size))
+        self.start = time.time()
 
 
     def get_move(self, move):
         #print(self.color)
         self.time = time.time()
+        if self.time - self.start > 400:
+            self.depth = 4
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
-
-
-        #self.train()
-        #self.simulate_lr(self.color)
-
 
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
@@ -66,10 +50,9 @@ class StudentAI():
     def minimax_move(self, moves: [list]) :
         best = []
         max_value = - math.inf
-        depth = 5
         for chess in moves:
             for move in chess:
-                val = self.max_value(move, depth, -math.inf, math.inf)
+                val = self.max_value(move, self.depth, -math.inf, math.inf)
                 if val > max_value:
                     best = [move]
                     max_value = val
@@ -100,24 +83,13 @@ class StudentAI():
 
             moves = board.get_all_possible_moves(curr_turn)
             while len(moves) > 0 and t <= 30:
-
-            for turn in range(20):
-                if board.is_win(self.color) == self.color:
-                    wins = 1
-                    self.undo(board, t)
-                    break
-                elif board.is_win(self.opponent[self.color]) == self.opponent[self.color]:
-                    self.undo(board, t)
-                    break
-                moves = board.get_all_possible_moves(curr_turn)
-
                 index = randint(0,len(moves)-1)
                 inner_index = randint(0,len(moves[index])-1)
                 board.make_move(moves[index][inner_index], curr_turn)
                 curr_turn = self.opponent[curr_turn]
                 moves = board.get_all_possible_moves(curr_turn)
                 t += 1
-            wins += 1 if board.is_win(curr_turn) == self.color else -1
+            wins += -1 if curr_turn == self.color else 1
             self.undo(board, t)
         board.undo()
         return wins
@@ -133,18 +105,14 @@ class StudentAI():
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+
         moves = self.board.get_all_possible_moves(self.color)
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            w = self.board.is_win(self.opponent[self.color])
-            u += 0 if w == 0 else 10 if w == self.color else -10
+            u -= 20
+            self.board.undo()
+            return u
 
-#         if depth == 0:
-#             u = self.utility(self.board)
-#             #u = self.utility_with_theta(self.board)
-
-#             self.board.undo()
-#             return u
         min_val = math.inf
         for chess in moves:
             for move in chess:
@@ -163,18 +131,14 @@ class StudentAI():
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            w = self.board.is_win(self.color)
-            u += 0 if w == 0 else 10 if w == self.color else -10
-
-#         if depth == 0:
-#             u = self.utility(self.board)
-#             #u = self.utility_with_theta(self.board)
-
+            u += 20
             self.board.undo()
             return u
+
         max_val = - math.inf
         for chess in moves:
             for move in chess:
@@ -189,34 +153,14 @@ class StudentAI():
 
     def utility(self, board, depth):
         u = 0
-        # u = board.is_win(self.color)
-        # u = 0 if u == 0 else 10 if u == 2 else -10
         if self.movecount + depth < 15:
-            time_param = math.log(self.movecount) + depth
-            # u = self.wcount_bcount(board) + self.wking_bking(board) * time_param + \
-            #     self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
-            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
+            u += self.wcount_bcount(board) + self.wking_bking(board) + self.wdis_bdis(board) * 0.5 + self.wback_bback(board) * 0.3
         elif self.movecount + depth > 35:
-            # time_param = math.log(self.movecount) + 1
             u += self.wcount_bcount(board) # + self.wback_bback(board) * (1/time_param) + self.wedge_bedge(board)
         else:
-            time_param = math.log(self.movecount) + depth
-            u += self.wcount_bcount(board) + self.wking_bking(board)
-            # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
-            #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
+            time_param = math.log(self.movecount + depth)
+            u += self.wcount_bcount(board) + self.wking_bking(board) * time_param
         return u if self.color == 2 else -u
-
-
-
-
-    ####################################################
-    ### Training heuristics using Linear Regression ####
-    ####################################################
-
-    def utility_with_theta(self, board):
-        X_black, X_white = self.get_X(board)
-        b = X_black.dot(self.thetas)
-        w = X_white.dot(self.thetas)
 
 
     def wcount_bcount(self, board):
@@ -251,3 +195,18 @@ class StudentAI():
         bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row))
         wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row))
         return wdiagonal - bdiagonal
+
+
+    def wdis_bdis(self, board):
+        wdis = sum(board.row - 1 - i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "W")
+        bdis = sum(i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "B")
+        return wdis - bdis
+
+# if __name__ == '__main__':
+#
+#     def wdis_bdis(board):
+#         wdis = sum(board.row - i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "W")
+#         bdis = sum(i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "B")
+#         return wdis - bdis
+#     board = [["B","W"],["W","B"]]
+#     print(wdis_bdis(board))

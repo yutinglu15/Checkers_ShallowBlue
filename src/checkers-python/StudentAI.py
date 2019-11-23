@@ -23,21 +23,7 @@ class StudentAI():
         self.opponent = {1:2,2:1}
         self.color = 2
 
-        ##
         self.movecount = 1
-
-
-        # new params
-        '''
-            new data clearification:
-                feature_matrix = [[X1, X2, ..., X_feature_size, Y],
-                                    ...
-                                    [X1m, X2m, ..., X_feature_size_m, Y]]
-        '''
-        #self.movecount = 2
-        #self.feature_size = 5
-        #self.thetas = np.random.rand(self.feature_size)
-        #self.feature_matrix = np.empty((0, self.feature_size))
 
 
     def get_move(self, move):
@@ -48,11 +34,6 @@ class StudentAI():
         else:
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
-
-
-        #self.train()
-        #self.simulate_lr(self.color)
-
 
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
@@ -133,18 +114,14 @@ class StudentAI():
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+
         moves = self.board.get_all_possible_moves(self.color)
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            w = self.board.is_win(self.opponent[self.color])
-            u += 0 if w == 0 else 10 if w == self.color else -10
+            u -= 10
+            self.board.undo()
+            return u
 
-#         if depth == 0:
-#             u = self.utility(self.board)
-#             #u = self.utility_with_theta(self.board)
-
-#             self.board.undo()
-#             return u
         min_val = math.inf
         for chess in moves:
             for move in chess:
@@ -163,18 +140,14 @@ class StudentAI():
             u = self.utility(self.board, depth)
             self.board.undo()
             return u
+
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            w = self.board.is_win(self.color)
-            u += 0 if w == 0 else 10 if w == self.color else -10
-
-#         if depth == 0:
-#             u = self.utility(self.board)
-#             #u = self.utility_with_theta(self.board)
-
+            u += 10
             self.board.undo()
             return u
+
         max_val = - math.inf
         for chess in moves:
             for move in chess:
@@ -205,18 +178,6 @@ class StudentAI():
             # u += self.wcount_bcount(board) + self.wking_bking(board) * time_param * 0.5 + \
             #     self.wback_bback(board) * (1/time_param) * 0.1 + self.wedge_bedge(board) * 0.1* (1/time_param)
         return u if self.color == 2 else -u
-
-
-
-
-    ####################################################
-    ### Training heuristics using Linear Regression ####
-    ####################################################
-
-    def utility_with_theta(self, board):
-        X_black, X_white = self.get_X(board)
-        b = X_black.dot(self.thetas)
-        w = X_white.dot(self.thetas)
 
 
     def wcount_bcount(self, board):

@@ -22,13 +22,13 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
-        self.depth = 4
+        self.depth = 6
         self.movecount = 1
         self.start = time.time()
-        self.theta = [ 2.10299768e+01, -1.00698472e+01,  6.21724894e-15,  3.62764430e+00,
-       -3.82180091e+00,  5.41201657e+00, -1.77635684e-15,  3.19744231e-14,
-        2.49369399e+00, -1.80563473e+00, -4.29588501e+00,  4.70774366e+00,
-        4.42168827e+00]
+        #self.theta = [8.61043154e+00,  4.48291855e+00,  7.78473553e+00, -7.07767178e-14,2.06230092e+00,  1.18768964e+00]#, 0]
+        #self.theta = [ 1.77478239e+01, -2.06957248e+00,  1.34482992e+00, -9.76996262e-15,
+       #-2.57914175e-01, -5.09654566e-01, -4.29094492e+00,  1.78097634e+00,
+       #-8.69330850e-01,  0.00000000e+00]
 
 
     def get_move(self, move):
@@ -113,7 +113,7 @@ class StudentAI():
         moves = self.board.get_all_possible_moves(self.color)
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            u -= 1000
+            #u -= 1000
             self.board.undo()
             return u
 
@@ -139,7 +139,7 @@ class StudentAI():
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
         if len(moves) == 0:
             u = self.utility(self.board, depth)
-            u += 1000
+            #u += 1000
             self.board.undo()
             return u
 
@@ -155,17 +155,31 @@ class StudentAI():
         return max_val
 
     def utility(self, board, depth):
-        wcount,bcount = self.wcount_bcount(board)
-        wking,bking = self.wking_bking(board)
-        wback, bback = self.wback_bback(board)
+        wking, bking = self.wking_bking(board)
+        wcount, bcount = self.wcount_bcount(board)
+        wdis, bdis = self.wdis_bdis(board)
         wedge, bedge = self.wedge_bedge(board)
-        wdiag, bdiag = self.wdiagonal_bdiagonal(board)
-        wdis,bdis = self.wdis_bdis(board)
+        wcenter, bcenter = self.wcenter_bcenter(board)
+        wback, bback = self.wback_bback(board)
 
-        Xlist = [bcount,wcount,wking,bking,wback,bback, wedge,bedge,wdiag,bdiag,wdis,bdis, self.movecount]
 
-        u = sum(x * theta for x, theta in zip(Xlist, self.theta))
-        return u
+        wscore = 5*wking + 3*wcount + 0.01*wdis + 0.001*wback + 0.0001*wedge + 0.00001*wcenter
+        bscore = 5 * bking + 3 * bcount + 0.01 * bdis + 0.001 * bback + 0.0001 * bedge + 0.00001 * bcenter
+
+        return wscore-bscore if self.color == 2 else bscore-wscore
+        # wcount,bcount = self.wcount_bcount(board)
+        # wking,bking = self.wking_bking(board)
+        # wback, bback = self.wback_bback(board)
+        # wedge, bedge = self.wedge_bedge(board)
+        # wdiag, bdiag = self.wdiagonal_bdiagonal(board)
+        # wdis,bdis = self.wdis_bdis(board)
+        #
+        # Xlist = [bcount-wcount, bking-wking, bback-wback, bedge-wedge, bdiag-wdiag, bdis-wdis]
+        #          #,self.movecount*(bcount-wcount), self.movecount*(bking-wking),
+        #          #self.movecount*(bback-wback),self.movecount*(bedge-wedge)]
+        #
+        # u = sum(x * theta for x, theta in zip(Xlist, self.theta))
+        # return u if self.color == 1 else -u
 
         # u = 0
         # # u += self.wcount_bcount(board) * 3 + self.wking_bking(board)
@@ -209,6 +223,11 @@ class StudentAI():
             board.board[i][0].color == "W" + board.board[i][board.col - 1].color == "W" for i in
             range(board.row))
         return wedge , bedge
+
+    def wcenter_bcenter(self, board):
+        wcenter = sum(board.board[int(board.row/2)][i].color =="W"+board.board[int(board.row/2)+1][i].color =="W" for i in range(board.col))
+        bcenter = sum(board.board[int(board.row/2)][i].color == "B"+board.board[int(board.row/2)+1][i].color =="B" for i in range(board.col))
+        return wcenter, bcenter
 
     def wdiagonal_bdiagonal(self, board):
         bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row//4, 3*board.row//4)) + \

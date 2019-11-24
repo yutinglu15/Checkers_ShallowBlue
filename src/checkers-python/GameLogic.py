@@ -2,8 +2,9 @@ from BoardClasses import *
 import sys
 sys.path.append("./AI_Extensions/")
 from AI_Extensions import *
-from StudentAI import StudentAI
+#from StudentAI import StudentAI
 #from StudentAI_MCTS import StudentAI
+from StudentAI_DC import StudentAI
 from ManualAI import ManualAI
 
 class GameLogic:

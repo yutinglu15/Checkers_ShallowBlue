@@ -340,9 +340,9 @@ class StudentAI():
         :return: triangle pattern in the last row
         '''
         boreo = sum(board.board[0][c].color == "B" and board.board[1][c+1].color == "B" \
-                    and board.board[0][c+2].color == "B" for c in range(0, board.col-1))
+                    and board.board[0][c+2].color == "B" for c in range(0, board.col-2))
         woreo = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W" \
-                    and board.board[board.row-1][c+2].color == "W" for c in range(0, board.col-1))
+                    and board.board[board.row-1][c+2].color == "W" for c in range(0, board.col-2))
         print(f"woreo: {woreo}, boreo: {boreo}")
         return woreo, boreo
 

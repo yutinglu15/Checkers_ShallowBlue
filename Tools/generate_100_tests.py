@@ -1,18 +1,37 @@
 import os
 from multiprocessing import Pool
 import time
-command1 = "python3 /home/yutil15/Checkers_ShallowBlue/Tools/AI_Runner.py 7 7 2 l /home/yutil15/Checkers_ShallowBlue/src/checkers-python/main.py /home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Poor_AI_368/main.py | tail -n 1"
-commandsecond1 = "python3 /home/yutil15/Checkers_ShallowBlue/Tools/AI_Runner.py 7 7 2 l /home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Poor_AI_368/main.py /home/yutil15/Checkers_ShallowBlue/src/checkers-python/main.py | tail -n 1"
 
+runner = "python3 /home/tingyind/cs171/Checkers_ShallowBlue/Tools/AI_Runner.py " 
+size1 = "7 7 2 l "
+size2 = "9 8 2 l "
+our_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/src/checkers-python/main.py "
+Average_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/Tools/Sample_AIs/Average_AI_368/main.py " 
+Random_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/Tools/Sample_AIs/Random_AI/main.py " 
+tail = "| tail -n 1"
 
-command2 = "python3 /home/yutil15/Checkers_ShallowBlue/Tools/AI_Runner.py 9 8 2 l /home/yutil15/Checkers_ShallowBlue/src/checkers-python/main.py /home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Poor_AI_368/main.py | tail -n 1"
-command3 = "python3 /home/yutil15/Checkers_ShallowBlue/Tools/AI_Runner.py 7 7 2 l /home/yutil15/Checkers_ShallowBlue/src/checkers-python/main.py /home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Average_AI_368/main.py | tail -n 1"
-test_time = 10
+dc1 = runner + size1 + our_AI + Random_AI
+dc2 = runner + size1 + Random_AI + our_AI
+dc3 = runner + size2 + our_AI + Random_AI
+dc4 = runner + size2 + Random_AI + our_AI
+
+dc_commands = [dc1, dc2, dc3, dc4]
+
+test1 = runner + size1 + our_AI + Average_AI
+test2 = runner + size1 + Average_AI + our_AI
+test3 = runner + size2 + our_AI + Average_AI
+test4 = runner + size2 + Average_AI + our_AI
+
+test_commands = [test1, test2, test3, test4]
+
+test_time = 100
 
 def run(i):
-	start = time.time()
-	os.system(command1)
-	print(i,time.time()-start)
+	for dc in dc_commands:
+		start = time.time()
+		os.system(dc+tail)
+		t = time.time() - start
+		print(i,time.time()-start)
 
 if __name__ == '__main__':
 	p = Pool(test_time)

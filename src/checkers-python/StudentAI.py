@@ -156,16 +156,25 @@ class StudentAI():
         self.board.undo()
         return max_val
 
-    def utility(self, board, depth):
+    def utility(self, board, color, depth):
         wking, bking = self.wking_bking(board)
         wcount, bcount = self.wcount_bcount(board)
         wdis, bdis = self.wdis_bdis(board)
         wedge, bedge = self.wedge_bedge(board)
         wcenter, bcenter = self.wcenter_bcenter(board)
         wback, bback = self.wback_bback(board)
+        wdiag, bdiag = self.wdiag_bdiag(board)
+        wdog, bdog = self.wdog_bdog(board)
+        wut, but = self.wuptriangle_buptriangle(board)
+        wdt, bdt = self.wdowntriangle_bdowntriangle(board)
+        wbridge, bbridge = self.wbridge_bbridge(board)
+        woreo, boreo = self.woreo_boreo(board)
+        moveable, eatable = self.moveables(board, color)
 
         wscore = 5 * wking + 3 * wcount + 0.01 * wdis + 0.001 * wback + 0.0001 * wedge + 0.00001 * wcenter
         bscore = 5 * bking + 3 * bcount + 0.01 * bdis + 0.001 * bback + 0.0001 * bedge + 0.00001 * bcenter
+        # wscore = 5 * wking + 3 * wcount + 0.01 * wdis + 0.001 * wback + 0.0001 * wedge + 0.00001 * wcenter
+        # bscore = 5 * bking + 3 * bcount + 0.01 * bdis + 0.001 * bback + 0.0001 * bedge + 0.00001 * bcenter
 
         return wscore - bscore if self.color == 2 else bscore - wscore
         # wcount,bcount = self.wcount_bcount(board)
@@ -208,6 +217,17 @@ class StudentAI():
                 elif self.board.board[r][c].color == "W":
                     wking += self.board.board[r][c].is_king
         return wking, bking
+
+    def moveables(self, board, color):
+        moves = [m for chess in board.get_all_possible_moves(color) for m in chess]
+        eatable = 0
+        for m in moves:
+            if len(m.seq) > 2:
+                eatable += (len(m.seq)-1)
+                continue
+            eatable += math.sqrt((m.seq[0][0]-m.seq[1][0])**2 + (m.seq[0][1]-m.seq[1][1])**2)
+        return len(moves), eatable
+
 
     def wback_bback(self, board):
         bback = sum(board.board[0][i].color == "B" for i in
@@ -254,6 +274,7 @@ class StudentAI():
         bc += board.board[board.row-1][0].color == "B" + board.board[board.row-1][board.row-1] == "B"
         wc += board.board[board.row - 1][0].color == "W" + board.board[board.row - 1][board.row - 1] == "W"
 
+        print(f"wdiag: {wc}, bdiag: {bc}")
         return wc, bc
 
     def wdog_bdog(self, board):
@@ -266,16 +287,17 @@ class StudentAI():
              and board.board[1][0].color == "W" + \
              board.board[0][board.col-1].color == "." and board.board[0][board.col-2].color == "B" \
              and board.board[1][board.col-1].color == "W"
-
+        print(f"wdog: {wc}, bdog: {bc}")
         return wc, bc
 
 
     def wbridge_bbridge(self, board):
         bc = sum(board.board[0][c].color == "B" and board.board[0][c+2] == "B" for c in range(board.col - 2))
-        wc = sum(board.board[board.row][c].color == "B" and board.board[board.row][c + 2] == "B" for c in range(board.col - 2))
+        wc = sum(board.board[board.row][c].color == "W" and board.board[board.row][c + 2] == "W" for c in range(board.col - 2))
+        print(f"wbridge: {wc}, bbridge: {bc}")
         return wc, bc
 
-    def wtriangle_briangle(self, board):
+    def wuptriangle_buptriangle(self, board):
         bcount, wcount = 0, 0
         for r in range(board.row-1):
             for c in range(board.col-2):
@@ -283,11 +305,31 @@ class StudentAI():
                     bcount += 1
                 if board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W":
                     wcount += 1
+        print(f"wuptriangle: {wcount}, buptriangle: {bcount}")
         return wcount, bcount
 
+    def wdowntriangle_bdowntriangle(self, board):
+        bcount, wcount = 0, 0
+        for r in range(board.row-1):
+            for c in range(board.col-2):
+                if board.board[r+1][c+1].color == "B" and board.board[r][c+1].color == "B" and board.board[r+1][c+2].color == "B":
+                    bcount += 1
+                if board.board[r+1][c+1].color == "W" and board.board[r][c+1].color == "W" and board.board[r+1][c+2].color == "W":
+                    wcount += 1
+        print(f"wdowntriangle: {wcount}, bdowntriangle: {bcount}")
+        return wcount, bcount
+
+
     def woreo_boreo(self, board):
-        boreo = sum(board.board[0][c].color == "B" and board.board[1][c+1].color == "B" and board.board[0][c+2].color == "B" for c in range(1, board.col-1))
-        woreo = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W" and board.board[board.row-1][c+2].color == "W" for c in range(1, board.col-1))
+        '''
+        :param board:
+        :return: triangle pattern in the last row
+        '''
+        boreo = sum(board.board[0][c].color == "B" and board.board[1][c+1].color == "B" \
+                    and board.board[0][c+2].color == "B" for c in range(1, board.col-1))
+        woreo = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W" \
+                    and board.board[board.row-1][c+2].color == "W" for c in range(1, board.col-1))
+        print(f"woreo: {woreo}, boreo: {boreo}")
         return woreo, boreo
 
 

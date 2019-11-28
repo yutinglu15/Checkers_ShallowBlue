@@ -24,14 +24,18 @@ test4 = runner + size2 + Average_AI + our_AI
 
 test_commands = [test1, test2, test3, test4]
 
-test_time = 100
+test_time = 10
 
-def run(i):
-	for dc in dc_commands:
+def run(j):
+	for i, t in enumerate(test_commands, 1):
 		start = time.time()
-		os.system(dc+tail)
-		t = time.time() - start
-		print(i,time.time()-start)
+		os.system(t+tail+' >> result'+str(i)+'.txt')
+		print(i, time.time()-start)
+	# for dc in dc_commands:
+	# 	start = time.time()
+	# 	os.system(dc+tail)
+	# 	t = time.time() - start
+	# 	print(i,time.time()-start)
 
 if __name__ == '__main__':
 	p = Pool(test_time)

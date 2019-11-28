@@ -24,18 +24,21 @@ class StudentAI():
         self.color = 2
         self.depth = 6
         self.movecount = 1
+
+        self.file = f"{self.col}-{self.row}-{self.color}-{randint(0,500)}-test.txt"
         self.start = time.time()
         #self.theta = [8.61043154e+00,  4.48291855e+00,  7.78473553e+00, -7.07767178e-14,2.06230092e+00,  1.18768964e+00]#, 0]
-        #self.theta = [ 1.77478239e+01, -2.06957248e+00,  1.34482992e+00, -9.76996262e-15,
-       #-2.57914175e-01, -5.09654566e-01, -4.29094492e+00,  1.78097634e+00,
-       #-8.69330850e-01,  0.00000000e+00]
+        self.theta = [-24.13, -7.87, -17.89, -16.67, -6.99, 7.22, 1.19, 0.72,
+                      -4.2, -4.52, -2.49, -3.14, 5.69, 0.02, 3.53, -3.58, 9.37,
+                      -3.81, -1.58, -1.75, 2.51, 0.26, 18.3, 10.25, 3.63,
+                      3.69, 1.32, -4.03]
 
 
     def get_move(self, move):
         #print(self.color)
         self.time = time.time()
-        if self.time - self.start > 400:
-            self.depth = 4
+        # if self.time - self.start > 400:
+        #     self.depth = 4
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
@@ -49,6 +52,8 @@ class StudentAI():
         move = moves[0][0] if len(moves) == 1 and len(moves[0]) == 1 else self.minimax_move(moves)
         self.board.make_move(move, self.color)
         self.movecount += 1
+        with open(self.file, 'a') as f:
+            f.write(f"Movecount:{self.movecount} Total time:{time.time()-self.start} This move takes:{time.time()-self.time} Depth:{self.depth}\n")
         return move
 
     def minimax_move(self, moves: [list]) :
@@ -105,15 +110,14 @@ class StudentAI():
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
 
-        if depth == 0 or time.time() - self.time > 8:
-            u = self.utility(self.board, self.color, depth)
+        if depth == 0 :
+            u = self.utility(self.board)
             self.board.undo()
             return u
 
         moves = self.board.get_all_possible_moves(self.color)
         if len(moves) == 0:
-            u = self.utility(self.board, self.color, depth)
-            #u -= 1000
+            u = -1000
             self.board.undo()
             return u
 
@@ -132,14 +136,13 @@ class StudentAI():
         self.board.make_move(move, self.color)
 
         if depth == 0 or time.time() - self.time > 8:
-            u = self.utility(self.board, self.opponent[self.color], depth)
+            u = self.utility(self.board)
             self.board.undo()
             return u
 
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
         if len(moves) == 0:
-            u = self.utility(self.board, self.opponent[self.color], depth)
-            #u += 1000
+            u = 1000
             self.board.undo()
             return u
 
@@ -154,7 +157,7 @@ class StudentAI():
         self.board.undo()
         return max_val
 
-    def utility(self, board, color, depth):
+    def utility(self, board):
         wking, bking = self.wking_bking(board)
         wcount, bcount = self.wcount_bcount(board)
         wdis, bdis = self.wdis_bdis(board)
@@ -169,22 +172,28 @@ class StudentAI():
         wdowntriangle, bdowntriangle = self.wdowntriangle_bdowntriangle(board)
         woreo, boreo = self.woreo_boreo(board)
 
-        movelen, eatable = self.moveables(board, color)
-
-        wscore = 5*wking + 3*wcount + 0.01*wdis + 0.001*wback + 0.0001*wedge + 0.00001*wcenter \
-                + 0.001*wdiag + 0.001*wdog + 0.001*wbridge + 0.001*wuptriangle + 0.001* wdowntriangle \
-                + 0.001 * woreo
-        bscore = 5 * bking + 3 * bcount + 0.01 * bdis + 0.001 * bback + 0.0001 * bedge + 0.00001 * bcenter\
-                + 0.001*bdiag + 0.001*bdog + 0.001*bbridge + 0.001*buptriangle + 0.001* bdowntriangle \
-                + 0.001 * boreo
-        if color == 2:
-            wscore += movelen*0.01 + eatable*0.01
+        if self.color == 1:
+            wmoveable, weatable = self.moveables(board, 2)
+            bmoveable, beatable = 0, 0
+            return sum(x*t for x,t in zip([wcount, wking, wdis, wback, wedge,
+                wcenter, wdiag, wdog, wbridge, wuptriangle,
+                wdowntriangle, woreo, wmoveable, weatable,
+                bcount, bking, bdis, bback, bedge,
+                 bcenter, bdiag, bdog, bbridge, buptriangle,
+                 bdowntriangle, boreo, bmoveable, beatable], self.theta))
         else:
-            bscore += movelen*0.01 + eatable*0.01
-        # wscore = 5 * wking + 3 * wcount + 0.01 * wdis + 0.001 * wback + 0.0001 * wedge + 0.00001 * wcenter
-        # bscore = 5 * bking + 3 * bcount + 0.01 * bdis + 0.001 * bback + 0.0001 * bedge + 0.00001 * bcenter
+            wmoveable, weatable = 0, 0
+            bmoveable, beatable = self.moveables(board, 1)
+            return sum(x*t for x, t in zip([bcount, bking, bdis, bback, bedge,
+                 bcenter, bdiag, bdog, bbridge, buptriangle,
+                 bdowntriangle, boreo, bmoveable, beatable,
+                wcount, wking, wdis, wback, wedge,
+                wcenter, wdiag, wdog, wbridge, wuptriangle,
+                wdowntriangle, woreo, wmoveable, weatable], self.theta))
 
-        return wscore-bscore if self.color == 2 else bscore-wscore
+
+
+
 
     def features(self, board, color):
         '''
@@ -238,7 +247,7 @@ class StudentAI():
                 continue
             if math.sqrt((m.seq[0][0] - m.seq[1][0]) ** 2 + (m.seq[0][1] - m.seq[1][1]) ** 2) > 1:
                 eatable += 1
-        print(f"len(moves): {len(moves)}, eatable: {eatable}")
+        #print(f"len(moves): {len(moves)}, eatable: {eatable}")
         return len(moves), eatable
 
 
@@ -255,7 +264,7 @@ class StudentAI():
         wedge = sum(
             (board.board[i][0].color == "W") + (board.board[i][board.col - 1].color == "W") for i in
             range(board.row))
-        print(f"wedge: {wedge}, bedge: {bedge}")
+        #print(f"wedge: {wedge}, bedge: {bedge}")
         return wedge , bedge
 
 
@@ -264,7 +273,7 @@ class StudentAI():
                       (board.board[int(board.row/2)+1][i].color =="W") for i in range(board.col))
         bcenter = sum((board.board[int(board.row/2)][i].color == "B")+ \
                       (board.board[int(board.row/2)+1][i].color =="B") for i in range(board.col))
-        print(f"wcenter: {wcenter}, bcenter: {bcenter}")
+        #print(f"wcenter: {wcenter}, bcenter: {bcenter}")
         return wcenter, bcenter
 
     def wdiagonal_bdiagonal(self, board):
@@ -272,7 +281,7 @@ class StudentAI():
                     sum(board.board[board.row - 1 - i][board.row - 1 - i].color == "B"  for i in range(board.row))
         wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row)) + \
                     sum(board.board[board.row - 1 - i][board.row - 1 - i].color == "W" for i in range(board.row))
-        print(f"wdiagonal: {wdiagonal}, bdiagonal: {bdiagonal}")
+        #print(f"wdiagonal: {wdiagonal}, bdiagonal: {bdiagonal}")
         return wdiagonal , bdiagonal
 
     def wdiag_bdiag(self, board):
@@ -288,7 +297,7 @@ class StudentAI():
         bc += (board.board[board.row-1][0].color == "B") + (board.board[board.row-1][board.row-1].color == "B")
         wc += (board.board[board.row - 1][0].color == "W") + (board.board[board.row - 1][board.row - 1].color == "W")
 
-        print(f"wdiag: {wc}, bdiag: {bc}")
+        #print(f"wdiag: {wc}, bdiag: {bc}")
         return wc, bc
 
     def wdog_bdog(self, board):
@@ -301,14 +310,14 @@ class StudentAI():
              and board.board[1][0].color == "W") + \
               (board.board[0][board.col-1].color == "." and board.board[0][board.col-2].color == "B" \
              and board.board[1][board.col-1].color == "W")
-        print(f"wdog: {wc}, bdog: {bc}")
+        #print(f"wdog: {wc}, bdog: {bc}")
         return wc, bc
 
 
     def wbridge_bbridge(self, board):
         bc = sum(board.board[0][c].color == "B" and board.board[0][c+2].color == "B" for c in range(1, board.col - 3))
         wc = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-1][c + 2].color == "W" for c in range(1, board.col - 3))
-        print(f"wbridge: {wc}, bbridge: {bc}")
+        #print(f"wbridge: {wc}, bbridge: {bc}")
         return wc, bc
 
     def wuptriangle_buptriangle(self, board):
@@ -319,7 +328,7 @@ class StudentAI():
                     bcount += 1
                 if board.board[r][c].color == "W" and board.board[r-1][c+1].color == "W" and board.board[r][c+2].color == "W":
                     wcount += 1
-        print(f"wuptriangle: {wcount}, buptriangle: {bcount}")
+        #print(f"wuptriangle: {wcount}, buptriangle: {bcount}")
         return wcount, bcount
 
     def wdowntriangle_bdowntriangle(self, board):
@@ -330,7 +339,7 @@ class StudentAI():
                     bcount += 1
                 if board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W":
                     wcount += 1
-        print(f"wdowntriangle: {wcount}, bdowntriangle: {bcount}")
+        #print(f"wdowntriangle: {wcount}, bdowntriangle: {bcount}")
         return wcount, bcount
 
 
@@ -343,7 +352,7 @@ class StudentAI():
                     and board.board[0][c+2].color == "B" for c in range(0, board.col-2))
         woreo = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W" \
                     and board.board[board.row-1][c+2].color == "W" for c in range(0, board.col-2))
-        print(f"woreo: {woreo}, boreo: {boreo}")
+        #print(f"woreo: {woreo}, boreo: {boreo}")
         return woreo, boreo
 
 

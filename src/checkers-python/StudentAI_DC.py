@@ -20,7 +20,7 @@ class StudentAI():
         self.color = 2
         self.movecount = 0
         self.simulate_times = 100
-        self.file = f"{self.col}-{self.row}-{self.color}-data.txt"
+        # self.file = f"{self.col}-{self.row}-{self.color}-data.txt"
         # self.file = open(f"{self.col}-{self.row}-data.txt", "a")
 
 
@@ -31,6 +31,7 @@ class StudentAI():
             self.board.make_move(move,self.opponent[self.color])
         else:
             self.color = 1
+        self.file = f"{self.col}-{self.row}-{self.color}-data.txt"
         moves = self.get_moves(self.board, self.color)
         move = self.monte_carlo_tree(moves, self.simulate_times)
         self.board.make_move(move, self.color)
@@ -104,8 +105,12 @@ class StudentAI():
         wdowntriangle, bdowntriangle = self.wdowntriangle_bdowntriangle(board)
         woreo, boreo = self.woreo_boreo(board)
 
-        wmoveable, weatable = self.moveables(board, 2)
-        bmoveable, beatable = self.moveables(board, 1)
+        if self.color == 1:
+            wmoveable, weatable = self.moveables(board, 2)
+            bmoveable, beatable = 0, 0
+        else:
+            wmoveable, weatable = 0, 0
+            bmoveable, beatable = self.moveables(board, 1)
 
         return [wcount, wking, wdis, wback, wedge,
                 wcenter, wdiag, wdog, wbridge, wuptriangle,

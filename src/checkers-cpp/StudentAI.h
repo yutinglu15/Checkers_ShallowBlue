@@ -11,7 +11,12 @@ class StudentAI :public AI
 public:
     Board board;
 	StudentAI(int col, int row, int p);
+	int depth;
+	int movecount;
+	float start;
+	extern float theta[28];
 	virtual Move GetMove(Move board);
+	Move minimax_move(vector<Move> moves);
 };
 
 #endif //STUDENTAI_H

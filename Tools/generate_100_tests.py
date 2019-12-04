@@ -2,12 +2,13 @@ import os
 from multiprocessing import Pool
 import time
 
-runner = "python3 /home/tingyind/cs171/Checkers_ShallowBlue/Tools/AI_Runner.py " 
+runner = "python3 /home/yutil15/Checkers_ShallowBlue/Tools/AI_Runner.py "
 size1 = "7 7 2 l "
 size2 = "9 8 2 l "
-our_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/src/checkers-python/main.py "
-Average_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/Tools/Sample_AIs/Average_AI_368/main.py " 
-Random_AI = "/home/tingyind/cs171/Checkers_ShallowBlue/Tools/Sample_AIs/Random_AI/main.py " 
+our_AI = "/home/yutil15/Checkers_ShallowBlue/src/checkers-python/main.py "
+Average_AI = "/home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Average_AI_368/main.py "
+Random_AI = "/home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Random_AI/main.py "
+Good_AI = "/home/yutil15/Checkers_ShallowBlue/Tools/Sample_AIs/Good_AI_368/main.py "
 tail = "| tail -n 1"
 
 dc1 = runner + size1 + our_AI + Random_AI
@@ -22,7 +23,13 @@ test2 = runner + size1 + Average_AI + our_AI
 test3 = runner + size2 + our_AI + Average_AI
 test4 = runner + size2 + Average_AI + our_AI
 
-test_commands = [test1, test2, test3, test4]
+good1 = runner + size1 + our_AI + Good_AI
+good2 = runner + size1 + Good_AI + our_AI
+good3 = runner + size2 + our_AI + Good_AI
+good4 = runner + size2 + Good_AI + our_AI
+
+#test_commands = [test1, test2, test3, test4]
+test_commands = [good1, good2, good3, good4]
 
 test_time = 10
 

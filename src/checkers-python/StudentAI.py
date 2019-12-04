@@ -52,8 +52,8 @@ class StudentAI():
         move = moves[0][0] if len(moves) == 1 and len(moves[0]) == 1 else self.minimax_move(moves)
         self.board.make_move(move, self.color)
         self.movecount += 1
-        with open(self.file, 'a') as f:
-            f.write(f"Movecount:{self.movecount} Total time:{time.time()-self.start} This move takes:{time.time()-self.time} Depth:{self.depth}\n")
+        # with open(self.file, 'a') as f:
+        #     f.write(f"Movecount:{self.movecount} Total time:{time.time()-self.start} This move takes:{time.time()-self.time} Depth:{self.depth}\n")
         return move
 
     def minimax_move(self, moves: [list]) :
@@ -107,15 +107,38 @@ class StudentAI():
         for _ in range(times):
             board.undo()
 
+    def u_after_move(self, move, board, color):
+        board.make_move(move, color)
+        u = self.utility(board)
+        board.undo()
+        return u
+
+    def get_u_list(self, moves, board, color):
+        u_list = []
+        for chess in moves:
+            chess_u_list = []
+            for move in chess:
+                chess_u_list.append(self.u_after_move(move, board, color))
+            u_list.append(chess_u_list)
+        return u_list
+
+    def reorder(self, u_list, moves):
+        for i in range(len(moves)):
+            moves[i] = [m for _,m in sorted(zip(u_list[i], moves[i]))]
+        return [chess for _,chess in sorted(zip([sum[i]/len[i] for i in u_list], moves) )]
+
+
     def min_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
 
-        if depth == 0 :
+        if depth == 0:
             u = self.utility(self.board)
             self.board.undo()
             return u
 
         moves = self.board.get_all_possible_moves(self.color)
+        moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
+
         if len(moves) == 0:
             u = -1000
             self.board.undo()

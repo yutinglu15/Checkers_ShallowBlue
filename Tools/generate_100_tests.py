@@ -28,8 +28,8 @@ good2 = runner + size1 + Good_AI + our_AI
 good3 = runner + size2 + our_AI + Good_AI
 good4 = runner + size2 + Good_AI + our_AI
 
-#test_commands = [test1, test2, test3, test4]
-test_commands = [good1, good2, good3, good4]
+test_commands = [test1, test2, test3, test4]
+#test_commands = [good1, good2, good3, good4]
 
 test_time = 10
 

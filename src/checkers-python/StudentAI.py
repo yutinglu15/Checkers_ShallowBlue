@@ -124,8 +124,13 @@ class StudentAI():
 
     def reorder(self, u_list, moves):
         for i in range(len(moves)):
-            moves[i] = [m for _,m in sorted(zip(u_list[i], moves[i]))]
-        return [chess for _,chess in sorted(zip([sum[i]/len[i] for i in u_list], moves) )]
+            #print(u_list)
+            #print(moves[i])
+            moves[i] = sorted(moves[i], key=lambda x: u_list[i][moves[i].index(x)])
+            #moves[i] = [m for _,m in sorted(zip(u_list[i], moves[i]))]
+        #return [chess for _,chess in sorted(zip([sum(i)/len(i) for i in u_list], moves))]
+        u_list_chess = [sum(i)/len(i) for i in u_list]
+        return sorted(moves, key=lambda x: u_list_chess[moves.index(x)])
 
 
     def min_value(self, move, depth, alpha, beta):
@@ -137,7 +142,7 @@ class StudentAI():
             return u
 
         moves = self.board.get_all_possible_moves(self.color)
-        moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
+        moves = self.reorder(self.get_u_list(moves, self.board, self.color), moves)
 
         if len(moves) == 0:
             u = -1000
@@ -164,6 +169,8 @@ class StudentAI():
             return u
 
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
+        moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
+
         if len(moves) == 0:
             u = 1000
             self.board.undo()

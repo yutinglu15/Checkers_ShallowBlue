@@ -46,7 +46,9 @@ class StudentAI():
             uct = wins/simulate_times + math.sqrt(2*math.log(s_parent)/simulate_times)
             if uct > best_uct:
                 best_move = move
-        return best_move
+        index = randint(0, len(moves) - 1)
+        move = moves[index]
+        return move
 
     def simulate(self, move, simulate_times):
         win = 0

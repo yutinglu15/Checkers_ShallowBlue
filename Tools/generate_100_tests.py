@@ -31,23 +31,36 @@ good4 = runner + size2 + Good_AI + our_AI
 test_commands = [test1, test2, test3, test4]
 #test_commands = [good1, good2, good3, good4]
 
-test_time = 10
+test_time = 100
 
-def run(j):
+def rundc(j, dc):
+	# for dc in dc_commands:
+	start = time.time()
+	os.system(dc+tail)
+	t = time.time() - start
+	print(i,time.time()-start)
+
+def runtest(j):
 	for i, t in enumerate(test_commands, 1):
 		start = time.time()
 		os.system(t+tail+' >> result'+str(i)+'.txt')
 		print(i, time.time()-start)
-	# for dc in dc_commands:
-	# 	start = time.time()
-	# 	os.system(dc+tail)
-	# 	t = time.time() - start
-	# 	print(i,time.time()-start)
+
 
 if __name__ == '__main__':
+	# for _ in range(10):
+	# 	for dc in dc_commands:
+	# 		p = Pool(test_time)
+	# 		for i in range(test_time+1):
+	# 			p.apply_async(rundc, args=(i,dc))
+	# 		print("Start Running")
+	# 		p.close()
+	# 		p.join()
+	# 		print("Done")
+
 	p = Pool(test_time)
 	for i in range(test_time+1):
-		p.apply_async(run, args=(i,))
+		p.apply_async(runtest, args=(i,))
 	print("Start Running")
 	p.close()
 	p.join()

@@ -22,12 +22,11 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
-        self.depth = self.get_depth()
         self.movecount = 1
 
         self.file = f"{self.col}-{self.row}-{self.color}-{randint(0,500)}-test.txt"
         self.start = time.time()
-        self.theta = self.get_theta()
+
 
 
         #self.theta = [8.61043154e+00,  4.48291855e+00,  7.78473553e+00, -7.07767178e-14,2.06230092e+00,  1.18768964e+00]#, 0]
@@ -44,7 +43,8 @@ class StudentAI():
 
 
     def get_move(self, move):
-        #print(self.color)
+        print(self.color)
+
         self.time = time.time()
         # if self.time - self.start > 400:
         #     self.depth = 4
@@ -54,6 +54,8 @@ class StudentAI():
             self.color = 1
         moves = self.board.get_all_possible_moves(self.color)
 
+        self.depth = self.get_depth()
+        self.theta = self.get_theta()
         #index = randint(0,len(moves)-1)
         #inner_index =  randint(0,len(moves[index])-1)
         #move = moves[index][inner_index]
@@ -66,13 +68,13 @@ class StudentAI():
         return move
 
     def get_depth(self):
-        if self.rol == 7 and self.col == 7:
+        if self.row == 7 and self.col == 7:
             return 6
         else:
-            return 6
+            return 4
 
     def get_theta(self):
-        if self.rol == 7 and self.col == 7:
+        if self.row == 7 and self.col == 7:
             return [-1.49, 0.41, 0.0, -0.19, -0.07, 0.25, 0.13, 0.0, 0.0, 0.09, -0.28, -0.53, 3.83, -3.95,
             1.88, 0.93, 0.08, 0.25, 0.17, 0.0, -0.22, 0.0, -0.24, -0.2, -0.02, 0.03, 0.0, 0.0]
         else:
@@ -80,138 +82,91 @@ class StudentAI():
              1.82, 0.82, 0.22, 0.1, 0.09, -0.38, -0.09, -1.31, 0.78, 0.42, -0.02, 0.15, 0.0, 0.0]
 
 
-    def minimax_move(self, moves: [list]) :
+    def minimax_move(self, moves: [list]):
         best = []
         max_value = - math.inf
         for chess in moves:
             for move in chess:
-                val = self.max_value(move, self.depth, -math.inf, math.inf)
+                val = self.min_value(move, self.depth, -math.inf, math.inf)
                 if val > max_value:
                     best = [move]
                     max_value = val
                 elif val == max_value:
                     best.append(move)
         return best[randint(0,len(best)-1)]
-        # if len(best) == 1:
-        #     return best[0]
-        # return self.monte_carlo_tree(best, 10, 100)
-
-    def monte_carlo_tree(self, moves: [], simulate_times: int, s_parent: int):
-        best_uct = - math.inf
-        best_move = 0
-        for move in moves:
-            wins = self.simulate(move, simulate_times)
-            uct = wins/simulate_times + math.sqrt(2*math.log(s_parent)/simulate_times)
-            if uct > best_uct:
-                best_move = move
-        return best_move
-
-    def simulate(self, move, s):
-        wins = 0
-        board = self.board
-        board.make_move(move, self.color)
-        for i in range(s):
-            curr_turn = self.opponent[self.color]
-            t = 0
-
-            moves = board.get_all_possible_moves(curr_turn)
-            while len(moves) > 0 and t <= 30:
-                index = randint(0,len(moves)-1)
-                inner_index = randint(0,len(moves[index])-1)
-                board.make_move(moves[index][inner_index], curr_turn)
-                curr_turn = self.opponent[curr_turn]
-                moves = board.get_all_possible_moves(curr_turn)
-                t += 1
-            wins += -1 if curr_turn == self.color else 1
-            self.undo(board, t)
-        board.undo()
-        return wins
-
-    def undo(self, board, times):
-        for _ in range(times):
-            board.undo()
-
-    def u_after_move(self, move, board, color):
-        board.make_move(move, color)
-        u = self.utility(board)
-        board.undo()
-        return u
-
-    def get_u_list(self, moves, board, color):
-        u_list = []
-        for chess in moves:
-            chess_u_list = []
-            for move in chess:
-                chess_u_list.append(self.u_after_move(move, board, color))
-            u_list.append(chess_u_list)
-        return u_list
-
-    def reorder(self, u_list, moves):
-        for i in range(len(moves)):
-            #print(u_list)
-            #print(moves[i])
-            moves[i] = sorted(moves[i], key=lambda x: u_list[i][moves[i].index(x)])
-            #moves[i] = [m for _,m in sorted(zip(u_list[i], moves[i]))]
-        #return [chess for _,chess in sorted(zip([sum(i)/len(i) for i in u_list], moves))]
-        u_list_chess = [sum(i)/len(i) for i in u_list]
-        return sorted(moves, key=lambda x: u_list_chess[moves.index(x)])
-
 
     def min_value(self, move, depth, alpha, beta):
+        self.board.make_move(move, self.color)
+
+        if depth == 0:
+            u = self.utility(self.board, self.color)
+            self.board.undo()
+            return u
+
+        moves = self.board.get_all_possible_moves(self.opponent[self.color])
+        moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), reverse = False)
+
+        if len(moves) == 0:
+            u = +1000
+            self.board.undo()
+            return u
+
+        min_val = math.inf
+        for move in moves:
+            min_val = min(self.max_value(move, depth - 1, alpha, beta), min_val)
+            beta = min(beta, min_val)
+            if alpha >= beta:
+                self.board.undo()
+                return min_val
+        self.board.undo()
+        return min_val
+
+    def max_value(self, move, depth, alpha, beta):
         self.board.make_move(move, self.opponent[self.color])
 
         if depth == 0:
-            u = self.utility(self.board)
+            u = self.utility(self.board, self.opponent[self.color])
             self.board.undo()
             return u
 
         moves = self.board.get_all_possible_moves(self.color)
-        #moves = self.reorder(self.get_u_list(moves, self.board, self.color), moves)
+        moves = self.reorder(self.get_u_list(moves, self.board, self.color), reverse = True)
 
         if len(moves) == 0:
             u = -1000
             self.board.undo()
             return u
 
-        min_val = math.inf
-        for chess in moves:
-            for move in chess:
-                min_val = min(self.max_value(move, depth - 1, alpha, beta), min_val)
-                beta = min(beta, min_val)
-                if alpha >= beta:
-                    self.board.undo()
-                    return min_val
-        self.board.undo()
-        return min_val
-
-    def max_value(self, move, depth, alpha, beta):
-        self.board.make_move(move, self.color)
-
-        if depth == 0 or time.time() - self.time > 8:
-            u = self.utility(self.board)
-            self.board.undo()
-            return u
-
-        moves = self.board.get_all_possible_moves(self.opponent[self.color])
-        # moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
-
-        if len(moves) == 0:
-            u = 1000
-            self.board.undo()
-            return u
-
         max_val = - math.inf
-        for chess in moves:
-            for move in chess:
-                max_val = max(self.min_value(move, depth - 1, alpha, beta), max_val)
-                alpha = max(alpha, max_val)
-                if alpha >= beta:
-                    self.board.undo()
-                    return max_val
+        for move in moves:
+            max_val = max(self.min_value(move, depth - 1, alpha, beta), max_val)
+            alpha = max(alpha, max_val)
+            if alpha >= beta:
+                self.board.undo()
+                return max_val
         self.board.undo()
         return max_val
 
-    def utility(self, board):
+
+
+    def u_after_move(self, move, board, color):
+        board.make_move(move, color)
+        u = self.utility(board, color)
+        board.undo()
+        return u
+
+    def get_u_list(self, moves, board, color):
+        u_list = {}
+        for chess in moves:
+            for move in chess:
+                u_list[move] = self.u_after_move(move, board, color)
+        return u_list
+
+    def reorder(self, u_list, reverse):
+        return sorted(u_list, key=lambda x: u_list[x], reverse = reverse)
+
+
+    def utility(self, board, color):
         wking, bking = self.wking_bking(board)
         wcount, bcount = self.wcount_bcount(board)
         wdis, bdis = self.wdis_bdis(board)
@@ -226,9 +181,15 @@ class StudentAI():
         wdowntriangle, bdowntriangle = self.wdowntriangle_bdowntriangle(board)
         woreo, boreo = self.woreo_boreo(board)
 
-        if self.color == 1:
+        if color == 1:
             wmoveable, weatable = self.moveables(board, 2)
             bmoveable, beatable = 0, 0
+        else:
+            wmoveable, weatable = 0, 0
+            bmoveable, beatable = self.moveables(board, 1)
+
+
+        if self.color == 1:
             return sum(x*t for x,t in zip([wcount, wking, wdis, wback, wedge,
             wcenter, wdiag, wdog, wbridge, wuptriangle,
             wdowntriangle, woreo, wmoveable, weatable,
@@ -237,18 +198,12 @@ class StudentAI():
              bdowntriangle, boreo, bmoveable, beatable], self.theta))
 
         else:
-            wmoveable, weatable = 0, 0
-            bmoveable, beatable = self.moveables(board, 1)
             return sum(x*t for x, t in zip([bcount, bking, bdis, bback, bedge,
              bcenter, bdiag, bdog, bbridge, buptriangle,
              bdowntriangle, boreo, bmoveable, beatable,
             wcount, wking, wdis, wback, wedge,
             wcenter, wdiag, wdog, wbridge, wuptriangle,
             wdowntriangle, woreo, wmoveable, weatable], self.theta))
-
-
-
-
 
 
     def features(self, board, color):

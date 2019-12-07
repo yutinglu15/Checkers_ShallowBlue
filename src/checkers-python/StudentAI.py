@@ -22,16 +22,25 @@ class StudentAI():
         self.color = ''
         self.opponent = {1:2,2:1}
         self.color = 2
-        self.depth = 6
+        self.depth = self.get_depth()
         self.movecount = 1
 
         self.file = f"{self.col}-{self.row}-{self.color}-{randint(0,500)}-test.txt"
         self.start = time.time()
+        self.theta = self.get_theta()
+
+
         #self.theta = [8.61043154e+00,  4.48291855e+00,  7.78473553e+00, -7.07767178e-14,2.06230092e+00,  1.18768964e+00]#, 0]
-        self.theta = [-24.13, -7.87, -17.89, -16.67, -6.99, 7.22, 1.19, 0.72,
-                      -4.2, -4.52, -2.49, -3.14, 5.69, 0.02, 3.53, -3.58, 9.37,
-                      -3.81, -1.58, -1.75, 2.51, 0.26, 18.3, 10.25, 3.63,
-                      3.69, 1.32, -4.03]
+        # self.theta = [-24.13, -7.87, -17.89, -16.67, -6.99, 7.22, 1.19, 0.72,
+        #               -4.2, -4.52, -2.49, -3.14, 5.69, 0.02, 3.53, -3.58, 9.37,
+        #               -3.81, -1.58, -1.75, 2.51, 0.26, 18.3, 10.25, 3.63,
+        #               3.69, 1.32, -4.03]
+        #self.theta = [-57.35, -6.41, -2.09, -38.9, -3.91, 6.48, 11.97, -0.39, 27.23, 11.11, -22.04, -11.36, 39.62, -41.32,
+        #    55.17, 24.54, 16.05, 12.08, 10.46, -17.8, 5.61, -7.38, 48.46, 20.26, 4.3, 2.54, 0.0, 0.0]
+        # self.theta77 = [-1.49, 0.41, 0.0, -0.19, -0.07, 0.25, 0.13, 0.0, 0.0, 0.09, -0.28, -0.53, 3.83, -3.95,
+        #     1.88, 0.93, 0.08, 0.25, 0.17, 0.0, -0.22, 0.0, -0.24, -0.2, -0.02, 0.03, 0.0, 0.0]
+        # self.theta98 = [-1.76, -0.4, 0.03, -0.08, 0.16, 0.3, 0.16, 0.55, -0.38, -0.17, -0.12, 0.28, 2.8, -2.77,
+        #     1.82, 0.82, 0.22, 0.1, 0.09, -0.38, -0.09, -1.31, 0.78, 0.42, -0.02, 0.15, 0.0, 0.0]
 
 
     def get_move(self, move):
@@ -55,6 +64,21 @@ class StudentAI():
         # with open(self.file, 'a') as f:
         #     f.write(f"Movecount:{self.movecount} Total time:{time.time()-self.start} This move takes:{time.time()-self.time} Depth:{self.depth}\n")
         return move
+
+    def get_depth(self):
+        if self.rol == 7 and self.col == 7:
+            return 6
+        else:
+            return 6
+
+    def get_theta(self):
+        if self.rol == 7 and self.col == 7:
+            return [-1.49, 0.41, 0.0, -0.19, -0.07, 0.25, 0.13, 0.0, 0.0, 0.09, -0.28, -0.53, 3.83, -3.95,
+            1.88, 0.93, 0.08, 0.25, 0.17, 0.0, -0.22, 0.0, -0.24, -0.2, -0.02, 0.03, 0.0, 0.0]
+        else:
+            return [-1.76, -0.4, 0.03, -0.08, 0.16, 0.3, 0.16, 0.55, -0.38, -0.17, -0.12, 0.28, 2.8, -2.77,
+             1.82, 0.82, 0.22, 0.1, 0.09, -0.38, -0.09, -1.31, 0.78, 0.42, -0.02, 0.15, 0.0, 0.0]
+
 
     def minimax_move(self, moves: [list]) :
         best = []
@@ -142,7 +166,7 @@ class StudentAI():
             return u
 
         moves = self.board.get_all_possible_moves(self.color)
-        moves = self.reorder(self.get_u_list(moves, self.board, self.color), moves)
+        #moves = self.reorder(self.get_u_list(moves, self.board, self.color), moves)
 
         if len(moves) == 0:
             u = -1000
@@ -169,7 +193,7 @@ class StudentAI():
             return u
 
         moves = self.board.get_all_possible_moves(self.opponent[self.color])
-        moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
+        # moves = self.reorder(self.get_u_list(moves, self.board, self.opponent[self.color]), moves)
 
         if len(moves) == 0:
             u = 1000
@@ -206,20 +230,22 @@ class StudentAI():
             wmoveable, weatable = self.moveables(board, 2)
             bmoveable, beatable = 0, 0
             return sum(x*t for x,t in zip([wcount, wking, wdis, wback, wedge,
-                wcenter, wdiag, wdog, wbridge, wuptriangle,
-                wdowntriangle, woreo, wmoveable, weatable,
-                bcount, bking, bdis, bback, bedge,
-                 bcenter, bdiag, bdog, bbridge, buptriangle,
-                 bdowntriangle, boreo, bmoveable, beatable], self.theta))
+            wcenter, wdiag, wdog, wbridge, wuptriangle,
+            wdowntriangle, woreo, wmoveable, weatable,
+            bcount, bking, bdis, bback, bedge,
+             bcenter, bdiag, bdog, bbridge, buptriangle,
+             bdowntriangle, boreo, bmoveable, beatable], self.theta))
+
         else:
             wmoveable, weatable = 0, 0
             bmoveable, beatable = self.moveables(board, 1)
             return sum(x*t for x, t in zip([bcount, bking, bdis, bback, bedge,
-                 bcenter, bdiag, bdog, bbridge, buptriangle,
-                 bdowntriangle, boreo, bmoveable, beatable,
-                wcount, wking, wdis, wback, wedge,
-                wcenter, wdiag, wdog, wbridge, wuptriangle,
-                wdowntriangle, woreo, wmoveable, weatable], self.theta))
+             bcenter, bdiag, bdog, bbridge, buptriangle,
+             bdowntriangle, boreo, bmoveable, beatable,
+            wcount, wking, wdis, wback, wedge,
+            wcenter, wdiag, wdog, wbridge, wuptriangle,
+            wdowntriangle, woreo, wmoveable, weatable], self.theta))
+
 
 
 

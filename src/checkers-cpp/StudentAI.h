@@ -10,8 +10,16 @@ class StudentAI :public AI
 {
 public:
     Board board;
+    int player, depth;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
+	double utility(const Board & board, int player) const;
+
+private:
+    Move minimaxMove(const vector<vector<Move>>& moves);
+    double get_min(const Move& move, int depth, double alpha, double beta);
+    double get_max(const Move& move, int depth, double alpha, double beta);
+
 };
 
 #endif //STUDENTAI_H

@@ -14,6 +14,7 @@ struct WB
 
 namespace
 {
+
     WB wking_bking(const Board & board)
     {
         int wking = 0;
@@ -26,130 +27,161 @@ namespace
                     else    bking++;
         return WB(wking, bking);
     }
-//
-//
-//    def moveables(self, board, color):
-//        moves = [m for chess in board.get_all_possible_moves(color) for m in chess]
-//        eatable = 0
-//        for m in moves:
-//            if len(m.seq) > 2:
-//                eatable += (len(m.seq) - 1)
-//                continue
-//            if math.sqrt((m.seq[0][0] - m.seq[1][0]) ** 2 + (m.seq[0][1] - m.seq[1][1]) ** 2) > 1:
-//                eatable += 1
-//        #print(f"len(moves): {len(moves)}, eatable: {eatable}")
-//        return len(moves), eatable
-//
-//
-//    def wback_bback(self, board):
-//        bback = sum(board.board[0][i].color == "B" for i in range(board.col))
-//        wback = sum(board.board[board.row - 1][i].color == "W" for i in range(board.col))
-//        return wback, bback
-//
-//
-//    def wedge_bedge(self, board):
-//        bedge = sum(
-//            (board.board[i][0].color == "B") + (board.board[i][board.col - 1].color == "B") for i in
-//            range(board.row))
-//        wedge = sum(
-//            (board.board[i][0].color == "W") + (board.board[i][board.col - 1].color == "W") for i in
-//            range(board.row))
-//        #print(f"wedge: {wedge}, bedge: {bedge}")
-//        return wedge , bedge
-//
-//
-//    def wcenter_bcenter(self, board):
-//        wcenter = sum((board.board[int(board.row/2)][i].color =="W")+ \
-//                      (board.board[int(board.row/2)+1][i].color =="W") for i in range(board.col))
-//        bcenter = sum((board.board[int(board.row/2)][i].color == "B")+ \
-//                      (board.board[int(board.row/2)+1][i].color =="B") for i in range(board.col))
-//        #print(f"wcenter: {wcenter}, bcenter: {bcenter}")
-//        return wcenter, bcenter
-//
-//    def wdiagonal_bdiagonal(self, board):
-//        bdiagonal = sum(board.board[i][i].color == "B"  for i in range(board.row//4, 3*board.row//4)) + \
-//                    sum(board.board[board.row - 1 - i][board.row - 1 - i].color == "B"  for i in range(board.row))
-//        wdiagonal = sum(board.board[i][i].color == "W"  for i in range(board.row)) + \
-//                    sum(board.board[board.row - 1 - i][board.row - 1 - i].color == "W" for i in range(board.row))
-//        #print(f"wdiagonal: {wdiagonal}, bdiagonal: {bdiagonal}")
-//        return wdiagonal , bdiagonal
-//
-//    def wdiag_bdiag(self, board):
-//        bc,wc = 0, 0
-//        for r in range(board.row-1):
-//            bc += (board.board[r][r].color == "B") + (board.board[r+1][r].color == "B") + (board.board[r][r+1].color == "B") \
-//                + (board.board[r][board.col-1-r].color == "B") + (board.board[r+1][board.col-1-r].color == "B") +\
-//                   (board.board[r][board.col-2-r].color == "B")
-//
-//            wc += (board.board[r][r].color == "W") + (board.board[r + 1][r].color == "W") + (board.board[r][r + 1].color == "W")\
-//                + (board.board[r][board.col-1-r].color == "W") + (board.board[r+1][board.col-1-r].color == "W") +\
-//                   (board.board[r][board.col-2-r].color == "W")
-//        bc += (board.board[board.row-1][0].color == "B") + (board.board[board.row-1][board.row-1].color == "B")
-//        wc += (board.board[board.row - 1][0].color == "W") + (board.board[board.row - 1][board.row - 1].color == "W")
-//
-//        #print(f"wdiag: {wc}, bdiag: {bc}")
-//        return wc, bc
-//
-//    def wdog_bdog(self, board):
-//        wc = (board.board[board.row-1][board.col-1].color == "." and board.board[board.row-1][board.col-2].color == "W" \
-//            and board.board[board.row-2][board.col-1].color == "B") +\
-//             (board.board[board.row-1][0].color == "." and board.board[board.row-1][1].color == "W"\
-//            and board.board[board.row-2][0].color == "B")
-//
-//        bc = (board.board[0][0].color == "." and board.board[0][1].color == "B" \
-//             and board.board[1][0].color == "W") + \
-//              (board.board[0][board.col-1].color == "." and board.board[0][board.col-2].color == "B" \
-//             and board.board[1][board.col-1].color == "W")
-//        #print(f"wdog: {wc}, bdog: {bc}")
-//        return wc, bc
-//
-//
-//    def wbridge_bbridge(self, board):
-//        bc = sum(board.board[0][c].color == "B" and board.board[0][c+2].color == "B" for c in range(1, board.col - 3))
-//        wc = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-1][c + 2].color == "W" for c in range(1, board.col - 3))
-//        #print(f"wbridge: {wc}, bbridge: {bc}")
-//        return wc, bc
-//
-//    def wuptriangle_buptriangle(self, board):
-//        bcount, wcount = 0, 0
-//        for r in range(1, board.row-1):
-//            for c in range(board.col-2):
-//                if board.board[r][c].color == "B" and board.board[r-1][c+1].color == "B" and board.board[r][c+2].color == "B":
-//                    bcount += 1
-//                if board.board[r][c].color == "W" and board.board[r-1][c+1].color == "W" and board.board[r][c+2].color == "W":
-//                    wcount += 1
-//        #print(f"wuptriangle: {wcount}, buptriangle: {bcount}")
-//        return wcount, bcount
-//
-//    def wdowntriangle_bdowntriangle(self, board):
-//        bcount, wcount = 0, 0
-//        for r in range(board.row-1):
-//            for c in range(board.col-2):
-//                if board.board[r][c].color == "B" and board.board[r+1][c+1].color == "B" and board.board[r][c+2].color == "B":
-//                    bcount += 1
-//                if board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W":
-//                    wcount += 1
-//        #print(f"wdowntriangle: {wcount}, bdowntriangle: {bcount}")
-//        return wcount, bcount
-//
-//
-//    def woreo_boreo(self, board):
-//        '''
-//        :param board:
-//        :return: triangle pattern in the last row
-//        '''
-//        boreo = sum(board.board[0][c].color == "B" and board.board[1][c+1].color == "B" \
-//                    and board.board[0][c+2].color == "B" for c in range(0, board.col-2))
-//        woreo = sum(board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W" \
-//                    and board.board[board.row-1][c+2].color == "W" for c in range(0, board.col-2))
-//        #print(f"woreo: {woreo}, boreo: {boreo}")
-//        return woreo, boreo
-//
-//
-//    def wdis_bdis(self, board):
-//        wdis = sum(board.row - 1 - i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "W")
-//        bdis = sum(i for i in range(board.row) for j in range(board.col) if board.board[i][j].color == "B")
-//        return wdis, bdis
+
+    WB wdis_bdis(const Board & board)
+    {
+        int wdis = 0;
+        int bdis = 0;
+        for (int r=0; r<board.row; r++)
+            for (int c=0; c<board.col; c++)
+                if (board.board[r][c].color == "W")
+                    wdis += board.row - 1 - r;
+                else if (board.board[r][c].color == "B")
+                    bdis += r;
+        return WB(wdis, bdis);
+    }
+
+    WB wback_bback(const Board & board)
+    {
+        int wback = 0;
+        int bback = 0;
+        for (int c=0; c<board.col; c++)
+            if (board.board[board.row-1][c].color == "W")
+                wback ++;
+            else if (board.board[0][c].color == "B")
+                bback ++;
+        return WB(wback, bback);
+    }
+
+
+    WB wedge_bedge(const Board & board)
+    {
+        int wedge = 0;
+        int bedge = 0;
+        for (int r=0; r<board.row; r++)
+        {
+            wedge += (board.board[r][0].color == "W") + (board.board[r][board.col - 1].color == "W");
+            bedge += (board.board[0][0].color == "B") + (board.board[0][board.col - 1].color == "B");
+        }
+        return WB(wedge, bedge);
+    }
+
+
+    WB wcenter_bcenter(const Board & board)
+    {
+        int wcenter = 0;
+        int bcenter = 0;
+        for (int c=0; c<board.col; c++)
+        {
+            wcenter += (board.board[board.row/2][c].color == "W") + (board.board[board.row/2+1][c].color == "W");
+            bcenter += (board.board[board.row/2][c].color == "B") + (board.board[board.row/2+1][c].color == "B");
+        }
+        return WB(wcenter, bcenter);
+    }
+
+
+    WB wdiag_bdiag(const Board & board)
+    {
+        int wdiag = 0;
+        int bdiag = 0;
+        for (int r=0; r<board.row-1; r++)
+        {
+            wdiag += (board.board[r][r].color == "W") + (board.board[r + 1][r].color == "W") + (board.board[r][r + 1].color == "W")
+                    + (board.board[r][board.col-1-r].color == "W") + (board.board[r+1][board.col-1-r].color == "W")
+                    + (board.board[r][board.col-2-r].color == "W");
+            bdiag += (board.board[r][r].color == "B") + (board.board[r+1][r].color == "B") + (board.board[r][r+1].color == "B")
+                    + (board.board[r][board.col-1-r].color == "B") + (board.board[r+1][board.col-1-r].color == "B")
+                    + (board.board[r][board.col-2-r].color == "B");
+        }
+        wdiag += (board.board[board.row - 1][0].color == "W") + (board.board[board.row - 1][board.row - 1].color == "W");
+        bdiag += (board.board[board.row-1][0].color == "B") + (board.board[board.row-1][board.row-1].color == "B");
+        return WB(wdiag, bdiag);
+    }
+
+
+    // some patterns
+    WB wdog_bdog(const Board & board)
+    {
+        int wdog = (board.board[board.row-1][board.col-1].color == "." and board.board[board.row-1][board.col-2].color == "W"
+                        and board.board[board.row-2][board.col-1].color == "B")
+                    + (board.board[board.row-1][0].color == "." and board.board[board.row-1][1].color == "W"
+                        and board.board[board.row-2][0].color == "B");
+        int bdog = (board.board[0][0].color == "." and board.board[0][1].color == "B" \
+                        and board.board[1][0].color == "W")
+                    +  (board.board[0][board.col-1].color == "." and board.board[0][board.col-2].color == "B" \
+                        and board.board[1][board.col-1].color == "W");
+        return WB(wdog, bdog);
+    }
+
+    WB wbridge_bbridge(const Board & board)
+    {
+        int wbridge = 0;
+        int bbridge = 0;
+        for (int c=1; c<board.col-3; c++)
+        {
+            wbridge += (board.board[board.row-1][c].color == "W") and (board.board[board.row-1][c + 2].color == "W");
+            bbridge += (board.board[0][c].color == "B") and (board.board[0][c+2].color == "B");
+        }
+        return WB(wbridge, bbridge);
+    }
+
+    WB woreo_boreo(const Board & board)
+    {
+        int woreo = 0;
+        int boreo = 0;
+        for (int c=0; c<board.col-3; c++)
+        {
+            woreo += board.board[board.row-1][c].color == "W" and board.board[board.row-2][c+1].color == "W"
+                    and board.board[board.row-1][c+2].color == "W";
+            boreo += board.board[0][c].color == "B" and board.board[1][c+1].color == "B"
+                    and board.board[0][c+2].color == "B";
+        }
+        return WB(woreo, boreo);
+    }
+
+    WB wuptriangle_buptriangle(const Board & board)
+    {
+        int wuptriangle = 0;
+        int buptriangle = 0;
+        for (int r=1; r<board.row - 1; r++)
+            for (int c=0; c<board.col - 2; c++)
+            {
+                wuptriangle += (board.board[r][c].color == "W" and board.board[r-1][c+1].color == "W" and board.board[r][c+2].color == "W");
+                buptriangle += (board.board[r][c].color == "B" and board.board[r-1][c+1].color == "B" and board.board[r][c+2].color == "B");
+            }
+        return WB(wuptriangle, buptriangle);
+    }
+
+    WB wdowntriangle_bdowntriangle(const Board & board)
+    {
+        int wdowntriangle = 0;
+        int bdowntriangle = 0;
+        for (int r=1; r<board.row - 1; r++)
+            for (int c=0; c<board.col - 2; c++)
+            {
+                wdowntriangle += (board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W");
+                bdowntriangle += (board.board[r][c].color == "B" and board.board[r+1][c+1].color == "B" and board.board[r][c+2].color == "B");
+            }
+        return WB(wdowntriangle, bdowntriangle);
+    }
+
+    WB moveables(Board & board, int player)
+    {
+        int len = 0;
+        int eatable = 0;
+        vector<vector<Move>> moves = board.getAllPossibleMoves(player);
+        for (auto chess : moves)
+            for (auto move: chess)
+            {
+                len ++;
+                if (move.seq.size() > 2)
+                    eatable += move.seq.size() - 1;
+                else if ((abs(move.seq[0][0] - move.seq[1][0]) + abs(move.seq[0][1] - move.seq[1][1])) > 2)
+                    eatable ++;
+            }
+        return WB(len, eatable);
+    }
+
 }
 
 
@@ -168,7 +200,9 @@ StudentAI::StudentAI(int col,int row,int p)
     board = Board(col,row,p);
     board.initializeGame();
     player = 2;
-    depth = 4;
+    if (col == 7) depth = 6;
+    else
+        depth = 4;
 }
 
 Move StudentAI::GetMove(Move move)
@@ -200,7 +234,7 @@ Move StudentAI::minimaxMove(const vector<vector<Move> > & moves)
         for (auto move : chess)
         {
             board.makeMove(move, player);
-            double score = get_min(move, depth, -INFINITY, INFINITY);
+            double score = get_min(move, depth, best_score, INFINITY);
             if (score > best_score)
             {
                 best = move;

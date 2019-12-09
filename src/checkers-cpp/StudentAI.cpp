@@ -14,7 +14,6 @@ struct WB
 
 namespace
 {
-
     WB wking_bking(const Board & board)
     {
         int wking = 0;
@@ -28,7 +27,21 @@ namespace
         return WB(wking, bking);
     }
 
-    WB wdis_bdis(const Board & board)
+    void wking_bking(const Board & board, int* wcount, int* bcount)
+    {
+        int wking = 0;
+        int bking = 0;
+        for (int r=0; r<board.row; r++)
+            for (int c=0; c<board.col; c++)
+                if (board.board[r][c].isKing)
+                    if (board.board[r][c].color == "W")
+                        wking ++;
+                    else    bking++;
+        wcount[1] = wking;
+        bcount[1] = bking;
+    }
+
+    void wdis_bdis(const Board & board, int* wcount, int* bcount)
     {
         int wdis = 0;
         int bdis = 0;
@@ -38,10 +51,12 @@ namespace
                     wdis += board.row - 1 - r;
                 else if (board.board[r][c].color == "B")
                     bdis += r;
-        return WB(wdis, bdis);
+        wcount[2] = wdis;
+        bcount[2] = bdis;
+//        return WB(wdis, bdis);
     }
 
-    WB wback_bback(const Board & board)
+    void wback_bback(const Board & board, int* wcount, int* bcount)
     {
         int wback = 0;
         int bback = 0;
@@ -50,11 +65,13 @@ namespace
                 wback ++;
             else if (board.board[0][c].color == "B")
                 bback ++;
-        return WB(wback, bback);
+        wcount[3] = wback;
+        bcount[3] = bback;
+//        return WB(wback, bback);
     }
 
 
-    WB wedge_bedge(const Board & board)
+    void wedge_bedge(const Board & board, int* wcount, int* bcount)
     {
         int wedge = 0;
         int bedge = 0;
@@ -63,11 +80,13 @@ namespace
             wedge += (board.board[r][0].color == "W") + (board.board[r][board.col - 1].color == "W");
             bedge += (board.board[0][0].color == "B") + (board.board[0][board.col - 1].color == "B");
         }
-        return WB(wedge, bedge);
+        wcount[4] = wedge;
+        bcount[4] = bedge;
+//        return WB(wedge, bedge);
     }
 
 
-    WB wcenter_bcenter(const Board & board)
+    void wcenter_bcenter(const Board & board, int* wcount, int* bcount)
     {
         int wcenter = 0;
         int bcenter = 0;
@@ -76,11 +95,13 @@ namespace
             wcenter += (board.board[board.row/2][c].color == "W") + (board.board[board.row/2+1][c].color == "W");
             bcenter += (board.board[board.row/2][c].color == "B") + (board.board[board.row/2+1][c].color == "B");
         }
-        return WB(wcenter, bcenter);
+        wcount[5] = wcenter;
+        bcount[5] = bcenter;
+//        return WB(wcenter, bcenter);
     }
 
 
-    WB wdiag_bdiag(const Board & board)
+    void wdiag_bdiag(const Board & board, int* wcount, int* bcount)
     {
         int wdiag = 0;
         int bdiag = 0;
@@ -95,12 +116,14 @@ namespace
         }
         wdiag += (board.board[board.row - 1][0].color == "W") + (board.board[board.row - 1][board.row - 1].color == "W");
         bdiag += (board.board[board.row-1][0].color == "B") + (board.board[board.row-1][board.row-1].color == "B");
-        return WB(wdiag, bdiag);
+        wcount[6] = wdiag;
+        bcount[6] = bdiag;
+//        return WB(wdiag, bdiag);
     }
 
 
     // some patterns
-    WB wdog_bdog(const Board & board)
+    void wdog_bdog(const Board & board, int* wcount, int* bcount)
     {
         int wdog = (board.board[board.row-1][board.col-1].color == "." and board.board[board.row-1][board.col-2].color == "W"
                         and board.board[board.row-2][board.col-1].color == "B")
@@ -110,10 +133,12 @@ namespace
                         and board.board[1][0].color == "W")
                     +  (board.board[0][board.col-1].color == "." and board.board[0][board.col-2].color == "B" \
                         and board.board[1][board.col-1].color == "W");
-        return WB(wdog, bdog);
+        wcount[7] = wdog;
+        bcount[7] = bdog;
+//        return WB(wdog, bdog);
     }
 
-    WB wbridge_bbridge(const Board & board)
+    void wbridge_bbridge(const Board & board, int* wcount, int* bcount)
     {
         int wbridge = 0;
         int bbridge = 0;
@@ -122,10 +147,42 @@ namespace
             wbridge += (board.board[board.row-1][c].color == "W") and (board.board[board.row-1][c + 2].color == "W");
             bbridge += (board.board[0][c].color == "B") and (board.board[0][c+2].color == "B");
         }
-        return WB(wbridge, bbridge);
+        wcount[8] = wbridge;
+        bcount[8] = bbridge;
+//        return WB(wbridge, bbridge);
     }
 
-    WB woreo_boreo(const Board & board)
+    void wuptriangle_buptriangle(const Board & board, int* wcount, int* bcount)
+    {
+        int wuptriangle = 0;
+        int buptriangle = 0;
+        for (int r=1; r<board.row - 1; r++)
+            for (int c=0; c<board.col - 2; c++)
+            {
+                wuptriangle += (board.board[r][c].color == "W" and board.board[r-1][c+1].color == "W" and board.board[r][c+2].color == "W");
+                buptriangle += (board.board[r][c].color == "B" and board.board[r-1][c+1].color == "B" and board.board[r][c+2].color == "B");
+            }
+        wcount[9] = wuptriangle;
+        bcount[9] = buptriangle;
+//        return WB(wuptriangle, buptriangle);
+    }
+
+    void wdowntriangle_bdowntriangle(const Board & board, int* wcount, int* bcount)
+    {
+        int wdowntriangle = 0;
+        int bdowntriangle = 0;
+        for (int r=1; r<board.row - 1; r++)
+            for (int c=0; c<board.col - 2; c++)
+            {
+                wdowntriangle += (board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W");
+                bdowntriangle += (board.board[r][c].color == "B" and board.board[r+1][c+1].color == "B" and board.board[r][c+2].color == "B");
+            }
+        wcount[10] = wdowntriangle;
+        bcount[10] = bdowntriangle;
+//        return WB(wdowntriangle, bdowntriangle);
+    }
+
+    void woreo_boreo(const Board & board, int* wcount, int* bcount)
     {
         int woreo = 0;
         int boreo = 0;
@@ -136,36 +193,13 @@ namespace
             boreo += board.board[0][c].color == "B" and board.board[1][c+1].color == "B"
                     and board.board[0][c+2].color == "B";
         }
-        return WB(woreo, boreo);
+        wcount[11] = woreo;
+        bcount[11] = boreo;
+//        return WB(woreo, boreo);
     }
 
-    WB wuptriangle_buptriangle(const Board & board)
-    {
-        int wuptriangle = 0;
-        int buptriangle = 0;
-        for (int r=1; r<board.row - 1; r++)
-            for (int c=0; c<board.col - 2; c++)
-            {
-                wuptriangle += (board.board[r][c].color == "W" and board.board[r-1][c+1].color == "W" and board.board[r][c+2].color == "W");
-                buptriangle += (board.board[r][c].color == "B" and board.board[r-1][c+1].color == "B" and board.board[r][c+2].color == "B");
-            }
-        return WB(wuptriangle, buptriangle);
-    }
 
-    WB wdowntriangle_bdowntriangle(const Board & board)
-    {
-        int wdowntriangle = 0;
-        int bdowntriangle = 0;
-        for (int r=1; r<board.row - 1; r++)
-            for (int c=0; c<board.col - 2; c++)
-            {
-                wdowntriangle += (board.board[r][c].color == "W" and board.board[r+1][c+1].color == "W" and board.board[r][c+2].color == "W");
-                bdowntriangle += (board.board[r][c].color == "B" and board.board[r+1][c+1].color == "B" and board.board[r][c+2].color == "B");
-            }
-        return WB(wdowntriangle, bdowntriangle);
-    }
-
-    WB moveables(Board & board, int player)
+    void moveables(Board & board, int player, int* count)
     {
         int len = 0;
         int eatable = 0;
@@ -179,8 +213,23 @@ namespace
                 else if ((abs(move.seq[0][0] - move.seq[1][0]) + abs(move.seq[0][1] - move.seq[1][1])) > 2)
                     eatable ++;
             }
-        return WB(len, eatable);
+        count[12] = len;
+        count[13] = eatable;
+//        return WB(len, eatable);
     }
+
+    double calculate_utility(int* wcount, int* bcount, double* theta)
+    {
+        double result = 0;
+        for (int i = 0; i < 14; i++)
+            result += wcount[i]*theta[i];
+        for (int i = 14; i < 28; i++)
+            result += bcount[i]*theta[i];
+        return result;
+    }
+
+
+
 
 }
 
@@ -203,6 +252,11 @@ StudentAI::StudentAI(int col,int row,int p)
     if (col == 7) depth = 6;
     else
         depth = 4;
+    // I don't remember!!!!! Lucy NB!
+    theta = new double[28]{-24.13, -7.87, -17.89, -16.67, -6.99, 7.22, 1.19, 0.72,
+                       -4.2, -4.52, -2.49, -3.14, 5.69, 0.02, 3.53, -3.58, 9.37,
+                       -3.81, -1.58, -1.75, 2.51, 0.26, 18.3, 10.25, 3.63,
+                       3.69, 1.32, -4.03};
 }
 
 Move StudentAI::GetMove(Move move)
@@ -296,7 +350,7 @@ double StudentAI::get_max(const Move& move, int depth, double alpha, double beta
     return max_val;
 }
 
-double StudentAI::utility(const Board & board, int player) const
+double StudentAI::basic_utility(const Board & board, int player) const
 {
     WB wk_bk = wking_bking(board);
     if (player == 1)
@@ -304,4 +358,40 @@ double StudentAI::utility(const Board & board, int player) const
     return 3*board.whiteCount + 5*wk_bk.w - 3*board.blackCount - 5*wk_bk.b;
 }
 
+double StudentAI::utility(Board & board, int player) const
+{
+//    [wcount, wking, wdis, wback, wedge,
+//            wcenter, wdiag, wdog, wbridge, wuptriangle,
+//            wdowntriangle, woreo, wmoveable, weatable]
+    int wcount[14];
+    wcount[0] = board.whiteCount;
+    int bcount[14];
+    bcount[0] = board.blackCount;
+    wking_bking(board, wcount, bcount);
+    wdis_bdis(board, wcount, bcount);
+    wback_bback(board, wcount, bcount);
+    wedge_bedge(board, wcount, bcount);
+    wcenter_bcenter(board, wcount, bcount);
+    wdiag_bdiag(board, wcount, bcount);
+    wdog_bdog(board, wcount, bcount);
+    wbridge_bbridge(board, wcount, bcount);
+    wuptriangle_buptriangle(board, wcount, bcount);
+    wdowntriangle_bdowntriangle(board, wcount, bcount);
+    woreo_boreo(board, wcount, bcount);
 
+    if (player == 1)
+    {
+        moveables(board, 2, wcount);
+        bcount[12] = 0;
+        bcount[13] = 0;
+    }
+    else
+    {
+        wcount[12] = 0;
+        wcount[13] = 0;
+        moveables(board, 1, bcount);
+    }
+
+    return calculate_utility(wcount, bcount, theta);
+
+}

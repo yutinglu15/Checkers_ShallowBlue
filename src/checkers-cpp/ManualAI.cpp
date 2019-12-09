@@ -32,13 +32,14 @@ Move ManualAI::GetMove(Move move)
     cout<<"Waiting input {int} {int}: ";
     int n = -1;
     int m = -1;
-    do {
-        cin >> n;
-        cin >> m;
-        if ((n < 0 || n >= moves.size()) || (m < 0 || m >= moves[n].size()))
-            cout << "Invalid move" << "\n" << "Waiting for input {int} {int}: ";
-    } while ((n < 0 || n >= moves.size()) || (m < 0 || m >= moves[n].size()));
-    Move res = moves[n][m];
+//    do {
+//        cin >> n;
+//        cin >> m;
+//        if ((n < 0 || n >= moves.size()) || (m < 0 || m >= moves[n].size()))
+//            cout << "Invalid move" << "\n" << "Waiting for input {int} {int}: ";
+//    } while ((n < 0 || n >= moves.size()) || (m < 0 || m >= moves[n].size()));
+//    Move res = moves[n][m];
+    Move res = moves[0][0];
     board.makeMove(res,player);
     return res;
 }

@@ -2,6 +2,7 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 struct WB
 {
@@ -225,6 +226,7 @@ namespace
             result += wcount[i]*theta[i];
         for (int i = 14; i < 28; i++)
             result += bcount[i-14]*theta[i];
+        std::cout << result << std::flush;
         return result;
     }
 
@@ -345,13 +347,18 @@ StudentAI::StudentAI(int col,int row, int p)
 
 Move StudentAI::GetMove(Move move)
 {
+    std::cout << move.toString()<< std::flush;
     if (move.seq.empty())
     {
         player = 1;
     } else{
+        std::cout << "Here" << std::flush;
         board.makeMove(move,player == 1?2:1);
+        std::cout << "Here after oppo make move" << std::flush;
     }
     vector<vector<Move> > moves = board.getAllPossibleMoves(player);
+    if (moves.empty())
+        cout << "moves is empty"<< std::flush;
 //    int i = rand() % (moves.size());
 //    vector<Move> checker_moves = moves[i];
 //    int j = rand() % (checker_moves.size());
@@ -371,8 +378,11 @@ Move StudentAI::minimaxMove(const vector<vector<Move> > & moves)
     {
         for (auto move : chess)
         {
+            std::cout << move.toString() << std::flush;
             board.makeMove(move, player);
+            std::cout << "Here after I try to move" << std::flush;
             double score = get_min(move, depth, best_score, INFINITY);
+            std::cout << "Here after get_min" << std::flush;
             if (score > best_score)
             {
                 best = move;
@@ -381,14 +391,16 @@ Move StudentAI::minimaxMove(const vector<vector<Move> > & moves)
             board.Undo();
         }
     }
+    std::cout << best.toString() << std::flush;
     return best;
 }
 
 double StudentAI::get_min(const Move& move, int depth, double alpha, double beta)
 {
     if (depth == 0)
-        if (row == 7)
-            return utility(board, player);
+        if (row == 7){
+            std::cout << "Here I calculate utility" << std::flush;
+            return utility(board, player);}
         else
             return basic_utility(board, player);
 
@@ -416,9 +428,9 @@ double StudentAI::get_max(const Move& move, int depth, double alpha, double beta
 {
     if (depth == 0)
         if (row == 7)
-            return utility(board, player);
+            return utility(board, player == 1?2:1);
         else
-            return basic_utility(board, player);
+            return basic_utility(board, player == 1?2:1);
 
     vector<vector<Move>> moves = board.getAllPossibleMoves(player);
 
@@ -448,14 +460,18 @@ double StudentAI::basic_utility(const Board & board, int player) const
     return 3*board.whiteCount + 5*wk_bk.w - 3*board.blackCount - 5*wk_bk.b;
 }
 
-double StudentAI::utility(Board & board, int player) const
+double StudentAI::utility(Board & board, int color) const
 {
 //    [wcount, wking, wdis, wback, wedge,
 //            wcenter, wdiag, wdog, wbridge, wuptriangle,
 //            wdowntriangle, woreo, wmoveable, weatable]
-    int wcount[14] = {0};
+    int wcount[14] = {0, 0, 0, 0, 0,
+                      0, 0, 0, 0, 0,
+                      0, 0, 0, 0};
     wcount[0] = board.whiteCount;
-    int bcount[14] = {0};
+    int bcount[14] = {0, 0, 0, 0, 0,
+                      0, 0, 0, 0, 0,
+                      0, 0, 0, 0};
 //    double[][] theta;
     bcount[0] = board.blackCount;
     wking_bking(board, wcount, bcount);
@@ -470,11 +486,24 @@ double StudentAI::utility(Board & board, int player) const
     wdowntriangle_bdowntriangle(board, wcount, bcount);
     woreo_boreo(board, wcount, bcount);
 
-    if (player == 1)
+//    for (int i=0;i<12;i++)
+//    {
+//        std::cout << wcount[i] << " ";
+//    }
+
+
+    if (color == 1)
     {
         moveables(board, 2, wcount);
         bcount[12] = 0;
         bcount[13] = 0;
+    }
+    else{
+        wcount[12] = 0;
+        wcount[13] = 0;
+        moveables(board, 1, bcount);
+    }
+    if (player == 1)
 //        double** theta_start_mid_last = get_theta_first(row, col);
         if (bcount[0] > 5)
             return calculate_utility(wcount, bcount, theta771_start);
@@ -482,12 +511,7 @@ double StudentAI::utility(Board & board, int player) const
             return calculate_utility(wcount, bcount, theta771_mid);
         else
             return calculate_utility(wcount, bcount, theta771_last);
-    }
     else
-    {
-        wcount[12] = 0;
-        wcount[13] = 0;
-        moveables(board, 1, bcount);
 //        double** theta_start_mid_last = get_theta_backhand(row, col);
         if (wcount[0] > 5)
             return calculate_utility(wcount, bcount, theta772_start);
@@ -495,7 +519,6 @@ double StudentAI::utility(Board & board, int player) const
             return calculate_utility(wcount, bcount, theta772_mid);
         else
             return calculate_utility(wcount, bcount, theta772_last);
-    }
 
 //    return calculate_utility(wcount, bcount, theta);
 

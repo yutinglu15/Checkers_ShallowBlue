@@ -13,8 +13,11 @@ public:
     int player, depth;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
-	double utility(const Board & board, int player) const;
-
+	double basic_utility(const Board & board, int player) const;
+	double utility(Board & board, int player) const;
+	double* theta;
+    virtual ~StudentAI()
+    { delete[] theta; }
 private:
     Move minimaxMove(const vector<vector<Move>>& moves);
     double get_min(const Move& move, int depth, double alpha, double beta);

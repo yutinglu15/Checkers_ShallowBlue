@@ -226,7 +226,7 @@ namespace
             result += wcount[i]*theta[i];
         for (int i = 14; i < 28; i++)
             result += bcount[i-14]*theta[i];
-        std::cout << result << std::flush;
+//        std::cout << result << std::flush;
         return result;
     }
 
@@ -347,18 +347,14 @@ StudentAI::StudentAI(int col,int row, int p)
 
 Move StudentAI::GetMove(Move move)
 {
-    std::cout << move.toString()<< std::flush;
     if (move.seq.empty())
     {
         player = 1;
     } else{
-        std::cout << "Here" << std::flush;
         board.makeMove(move,player == 1?2:1);
-        std::cout << "Here after oppo make move" << std::flush;
     }
     vector<vector<Move> > moves = board.getAllPossibleMoves(player);
-    if (moves.empty())
-        cout << "moves is empty"<< std::flush;
+
 //    int i = rand() % (moves.size());
 //    vector<Move> checker_moves = moves[i];
 //    int j = rand() % (checker_moves.size());
@@ -378,11 +374,8 @@ Move StudentAI::minimaxMove(const vector<vector<Move> > & moves)
     {
         for (auto move : chess)
         {
-            std::cout << move.toString() << std::flush;
             board.makeMove(move, player);
-            std::cout << "Here after I try to move" << std::flush;
             double score = get_min(move, depth, best_score, INFINITY);
-            std::cout << "Here after get_min" << std::flush;
             if (score > best_score)
             {
                 best = move;
@@ -391,7 +384,6 @@ Move StudentAI::minimaxMove(const vector<vector<Move> > & moves)
             board.Undo();
         }
     }
-    std::cout << best.toString() << std::flush;
     return best;
 }
 
@@ -399,7 +391,6 @@ double StudentAI::get_min(const Move& move, int depth, double alpha, double beta
 {
     if (depth == 0)
         if (row == 7){
-            std::cout << "Here I calculate utility" << std::flush;
             return utility(board, player);}
         else
             return basic_utility(board, player);
@@ -407,7 +398,7 @@ double StudentAI::get_min(const Move& move, int depth, double alpha, double beta
     vector<vector<Move>> moves = board.getAllPossibleMoves(player == 1?2:1);
 
     if (moves.size() == 0)
-        return INFINITY;
+        return 5000;
 
     double min_val = INFINITY;
     for (auto chess : moves)
@@ -430,12 +421,12 @@ double StudentAI::get_max(const Move& move, int depth, double alpha, double beta
         if (row == 7)
             return utility(board, player == 1?2:1);
         else
-            return basic_utility(board, player == 1?2:1);
+            return basic_utility(board, player);
 
     vector<vector<Move>> moves = board.getAllPossibleMoves(player);
 
     if (moves.size() == 0)
-        return - INFINITY;
+        return - 5000;
 
     double max_val = - INFINITY;
     for (auto chess : moves)

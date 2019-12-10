@@ -60,8 +60,8 @@ class ManualAI():
         #         continue
         #     else:
         #         break
-        index = randint(0,len(moves)-1)
-        inner_index =  randint(0,len(moves[index])-1)
-        res_move = moves[index][inner_index]
+        # index = randint(0,len(moves)-1)
+        # inner_index =  randint(0,len(moves[index])-1)
+        res_move = moves[0][0]
         self.board.make_move(res_move, self.color)
         return res_move

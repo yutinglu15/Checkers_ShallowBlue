@@ -76,7 +76,7 @@ class StudentAI():
 
     def get_depth(self):
         if self.row == 7 and self.col == 7:
-            return 6
+            return 0
         else:
             return 4
 
@@ -132,6 +132,7 @@ class StudentAI():
 
         if depth == 0:
             u = self.utility(self.board, self.color)
+            print(u)
             self.board.undo()
             return u
 
@@ -159,6 +160,7 @@ class StudentAI():
 
         if depth == 0:
             u = self.utility(self.board, self.opponent[self.color])
+            print(u)
             self.board.undo()
             return u
 
@@ -211,7 +213,7 @@ class StudentAI():
         wuptriangle, buptriangle = self.wuptriangle_buptriangle(board)
         wdowntriangle, bdowntriangle = self.wdowntriangle_bdowntriangle(board)
         woreo, boreo = self.woreo_boreo(board)
-
+        board.show_board()
         if color == 1:
             wmoveable, weatable = self.moveables(board, 2)
             bmoveable, beatable = 0, 0
@@ -226,6 +228,7 @@ class StudentAI():
                         bcount, bking, bdis, bback, bedge,
                         bcenter, bdiag, bdog, bbridge, buptriangle,
                         bdowntriangle, boreo, bmoveable, beatable]
+            print(str([i for i in features]))
             if bcount > self.cutoff[0]:
                 return sum(x * t for x, t in zip(features, self.theta1[0]))
             elif self.cutoff[1] < bcount <= self.cutoff[0]:
@@ -235,14 +238,13 @@ class StudentAI():
 
 
         else:
-            wmoveable, weatable = 0, 0
-            bmoveable, beatable = self.moveables(board, 1)
             features = [wcount, wking, wdis, wback, wedge,
                         wcenter, wdiag, wdog, wbridge, wuptriangle,
                         wdowntriangle, woreo, wmoveable, weatable,
                         bcount, bking, bdis, bback, bedge,
                         bcenter, bdiag, bdog, bbridge, buptriangle,
                         bdowntriangle, boreo, bmoveable, beatable]
+            print(str([i for i in features]))
             if wcount > self.cutoff[0]:
                 return sum(x * t for x, t in zip(features, self.theta2[0]))
             elif self.cutoff[1] < wcount <= self.cutoff[0]:
